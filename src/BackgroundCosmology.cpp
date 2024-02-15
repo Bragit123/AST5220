@@ -22,9 +22,18 @@ BackgroundCosmology::BackgroundCosmology(
   //=============================================================================
   // TODO: Compute OmegaR, OmegaNu, OmegaLambda, H0, ...
   //=============================================================================
-  //...
-  //...
-  //...
+  H0 = Constants.H0_over_h * h;
+
+  double OmegaR_numerator = 2 * pow(M_PI, 2) * pow(Constants.k_b * TCMB, 4) * 8 * M_PI * Constants.G;
+  double OmegaR_denominator = 30 * pow(Constants.hbar, 3) * pow(Constants.c, 5) * 3 * pow(H0, 2);
+  OmegaR = OmegaR_numerator / OmegaR_denominator;
+
+  OmegaNu = Neff * 7/8 * pow(4.0/11.0, 4.0/3.0) * OmegaR;
+
+  OmegaLambda = 1.0 - (OmegaK + OmegaB + OmegaCDM + OmegaR + OmegaNu);
+
+  std::cout << H_of_x(5.0) << std::endl;
+  std::cout << Hp_of_x(5.0) << std::endl;
   //...
 }
 
@@ -77,10 +86,11 @@ double BackgroundCosmology::H_of_x(double x) const{
   //=============================================================================
   // TODO: Implement...
   //=============================================================================
-  //...
-  //...
-
-  return 0.0;
+  double term_b_CDM = (OmegaB + OmegaCDM) * exp(-3*x);
+  double term_R_Nu = (OmegaR + OmegaNu) * exp(-4*x);
+  double term_K = OmegaK * exp(-2*x);
+  double H_sqrt = sqrt(term_b_CDM + term_R_Nu + term_K + OmegaLambda);
+  return H0 * H_sqrt;
 }
 
 double BackgroundCosmology::Hp_of_x(double x) const{
@@ -88,10 +98,8 @@ double BackgroundCosmology::Hp_of_x(double x) const{
   //=============================================================================
   // TODO: Implement...
   //=============================================================================
-  //...
-  //...
-
-  return 0.0;
+  double H = H_of_x(x);
+  return exp(x) * H;
 }
 
 double BackgroundCosmology::dHpdx_of_x(double x) const{
