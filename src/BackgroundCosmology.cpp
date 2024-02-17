@@ -27,18 +27,6 @@ BackgroundCosmology::BackgroundCosmology(
   OmegaNu = Neff * 7/8 * pow(4.0/11.0, 4.0/3.0) * OmegaR;
 
   OmegaLambda = 1.0 - (OmegaK + OmegaB + OmegaCDM + OmegaR + OmegaNu);
-
-  double x_val = 1e-3;
-  std::cout << "OmegaB = " << get_OmegaB(x_val) << std::endl;
-  std::cout << "OmegaR = " << get_OmegaR(x_val) << std::endl;
-  std::cout << "OmegaNu = " << get_OmegaNu(x_val) << std::endl;
-  std::cout << "OmegaCDM = " << get_OmegaCDM(x_val) << std::endl;
-  std::cout << "OmegaLambda = " << get_OmegaLambda(x_val) << std::endl;
-  std::cout << "OmegaK = " << get_OmegaK(x_val) << std::endl;
-  std::cout << "TCMB = " << get_TCMB(x_val) << std::endl;
-  std::cout << "r = " << get_comoving_distance_of_x(x_val) << std::endl;
-  std::cout << "dL = " << get_luminosity_distance_of_x(x_val) << std::endl;
-  //...
 }
 
 //====================================================
@@ -79,8 +67,33 @@ void BackgroundCosmology::solve(){
 
   auto eta_array = ode.get_data_by_component(0);
 
-  eta_of_x_spline.create(x_array, eta_array, "eta(x)");
+  eta_of_x_spline.create(x_array, eta_array, "eta");
   Utils::EndTiming("Eta");
+
+
+  // Cosmic time t
+  Utils::StartTiming("t");
+
+  ODEFunction dtdx = [&](double x, const double *t, double *dtdx){
+
+    //=============================================================================
+    // TODO: Set the rhs of the detadx ODE
+    //=============================================================================
+    double H = H_of_x(x);
+
+    dtdx[0] = 1/H;
+
+    return GSL_SUCCESS;
+  };
+
+  Vector t_ini{1/(2*H_of_x(x_start))};
+  ode.solve(dtdx, x_array, t_ini);
+
+  auto t_array = ode.get_data_by_component(0);
+
+  t_of_x_spline.create(x_array, t_array, "t");
+
+  Utils::EndTiming("t");
 }
 
 //====================================================
@@ -186,28 +199,11 @@ double BackgroundCosmology::get_OmegaK(double x) const{
 
   return OmegaK / denominator;
 }
-    
-double BackgroundCosmology::get_luminosity_distance_of_x(double x) const{
-  //=============================================================================
-  // TODO: Implement...
-  //=============================================================================
-  
-  double r = get_comoving_distance_of_x(x);
-  double dL = r * exp(-x);
 
-  return dL;
-}
-double BackgroundCosmology::get_comoving_distance_of_x(double x) const{
-  //=============================================================================
-  // TODO: Implement...
-  //=============================================================================
-  double eta = 0.0;
-  double eta0 = 1.0;
-
-  double chi = eta0 - eta;
+double BackgroundCosmology::get_curvature_scale_factor_of_chi(double chi) const{
+  double r;
   double u = sqrt(abs(OmegaK)) * H0 * chi / Constants.c; // sin/sinh - argument.
   double tol = 1e-10;
-  double r;
 
   if (OmegaK < -tol) {
     r = chi * sin(u) / u;
@@ -219,9 +215,44 @@ double BackgroundCosmology::get_comoving_distance_of_x(double x) const{
 
   return r;
 }
+    
+double BackgroundCosmology::get_luminosity_distance_of_x(double x) const{
+  //=============================================================================
+  // TODO: Implement...
+  //=============================================================================
+  
+  double chi = get_comoving_distance_of_x(x);
+  
+  double r = get_curvature_scale_factor_of_chi(chi);
+
+  double dL = r * exp(-x);
+
+  return dL;
+}
+double BackgroundCosmology::get_comoving_distance_of_x(double x) const{
+  //=============================================================================
+  // TODO: Implement...
+  //=============================================================================
+  double eta0 = eta_of_x(0); // eta0 = eta today, which is when a=1, or x=log(a)=0
+  double eta = eta_of_x(x);
+
+  double chi = eta0 - eta;
+
+  return chi;
+}
+
+double BackgroundCosmology::get_angular_distance_of_x(double x) const{
+  double chi = get_comoving_distance_of_x(x);
+  double r = get_curvature_scale_factor_of_chi(chi);
+  return exp(x) * r;
+}
 
 double BackgroundCosmology::eta_of_x(double x) const{
   return eta_of_x_spline(x);
+}
+
+double BackgroundCosmology::t_of_x(double x) const{
+  return t_of_x_spline(x);
 }
 
 double BackgroundCosmology::get_H0() const{ 
@@ -244,7 +275,8 @@ double BackgroundCosmology::get_TCMB(double x) const{
 //====================================================
 // Print out info about the class
 //====================================================
-void BackgroundCosmology::info() const{ 
+void BackgroundCosmology::info() const{
+  double Gyr = 1e9 * 365 * 24 * 60 * 60;
   std::cout << "\n";
   std::cout << "Info about cosmology class:\n";
   std::cout << "OmegaB:      " << OmegaB      << "\n";
@@ -256,6 +288,8 @@ void BackgroundCosmology::info() const{
   std::cout << "Neff:        " << Neff        << "\n";
   std::cout << "h:           " << h           << "\n";
   std::cout << "TCMB:        " << TCMB        << "\n";
+  std::cout << "OmegaTotal   " << OmegaB+OmegaCDM+OmegaLambda+OmegaK+OmegaNu+OmegaR << "\n";
+  std::cout << "t0 (Gyr):    " << t_of_x(0) / Gyr << "\n";
   std::cout << std::endl;
 } 
 
@@ -271,15 +305,21 @@ void BackgroundCosmology::output(const std::string filename) const{
 
   std::ofstream fp(filename.c_str());
   auto print_data = [&] (const double x) {
-    fp << x                  << " ";
-    fp << eta_of_x(x)        << " ";
-    fp << Hp_of_x(x)         << " ";
-    fp << dHpdx_of_x(x)      << " ";
-    fp << get_OmegaB(x)      << " ";
-    fp << get_OmegaCDM(x)    << " ";
-    fp << get_OmegaLambda(x) << " ";
-    fp << get_OmegaR(x)      << " ";
-    fp << get_OmegaNu(x)     << " ";
+    fp << x                                 << " ";
+    fp << eta_of_x(x)                       << " ";
+    fp << t_of_x(x)                         << " ";
+    fp << H_of_x(x)/get_H0()                << " ";
+    fp << Hp_of_x(x)                        << " ";
+    fp << dHpdx_of_x(x)                     << " ";
+    fp << ddHpddx_of_x(x)                   << " ";
+    fp << get_luminosity_distance_of_x(x)   << " ";
+    fp << get_comoving_distance_of_x(x)     << " ";
+    fp << get_angular_distance_of_x(x)      << " ";
+    fp << get_OmegaB(x)                     << " ";
+    fp << get_OmegaCDM(x)                   << " ";
+    fp << get_OmegaLambda(x)                << " ";
+    fp << get_OmegaR(x)                     << " ";
+    fp << get_OmegaNu(x)                    << " ";
     fp << get_OmegaK(x); // Removed [<< " "] because it created an extra column of NaNs pandas
     fp <<"\n";
   };
