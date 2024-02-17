@@ -53,7 +53,8 @@ void BackgroundCosmology::solve(){
   // TODO: Set the range of x and the number of points for the splines
   // For this Utils::linspace(x_start, x_end, npts) is useful
   //=============================================================================
-  Vector x_array;
+  double npts = 100;
+  Vector x_array = Utils::linspace(x_start, x_end, npts);
 
   // The ODE for deta/dx
   ODEFunction detadx = [&](double x, const double *eta, double *detadx){
@@ -61,10 +62,9 @@ void BackgroundCosmology::solve(){
     //=============================================================================
     // TODO: Set the rhs of the detadx ODE
     //=============================================================================
-    //...
-    //...
+    double Hp = Hp_of_x(x);
 
-    detadx[0] = 0.0;
+    detadx[0] = Constants.c/Hp;
 
     return GSL_SUCCESS;
   };
@@ -73,11 +73,13 @@ void BackgroundCosmology::solve(){
   // TODO: Set the initial condition, set up the ODE system, solve and make
   // the spline eta_of_x_spline 
   //=============================================================================
-  // ...
-  // ...
-  // ...
-  // ...
+  Vector eta_ini{1.0};
+  ODESolver ode;
+  ode.solve(detadx, x_array, eta_ini);
 
+  auto eta_array = ode.get_data_by_component(0);
+
+  eta_of_x_spline.create(x_array, eta_array, "eta(x)");
   Utils::EndTiming("Eta");
 }
 
@@ -278,7 +280,7 @@ void BackgroundCosmology::output(const std::string filename) const{
     fp << get_OmegaLambda(x) << " ";
     fp << get_OmegaR(x)      << " ";
     fp << get_OmegaNu(x)     << " ";
-    fp << get_OmegaK(x)      << " ";
+    fp << get_OmegaK(x); // Removed [<< " "] because it created an extra column of NaNs pandas
     fp <<"\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
