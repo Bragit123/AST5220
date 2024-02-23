@@ -6,7 +6,9 @@ import seaborn as sns
 cosmo_df = pd.read_csv("cosmology.txt", sep=" ", header=None)
 cosmo_df.columns = [
     "x",
+    "z",
     "eta",
+    "t",
     "H_over_H0",
     "Hp",
     "dHpdx",
@@ -28,12 +30,12 @@ H0_over_h = 100 * 1e3 / Mpc
 c = 3e8
 
 # Things to plot
+a = np.exp(cosmo_df["x"])
 cosmo_df["etaHp_c"] = cosmo_df["eta"] * cosmo_df["Hp"] / c
 cosmo_df["OmegaRel"] = cosmo_df["OmegaR"] + cosmo_df["OmegaNu"]
 cosmo_df["OmegaMat"] = cosmo_df["OmegaB"] + cosmo_df["OmegaCDM"]
 cosmo_df["dHpdx_Hp"] = cosmo_df["dHpdx"] / cosmo_df["Hp"]
 cosmo_df["ddHpddx_Hp"] = cosmo_df["ddHpddx"] / cosmo_df["Hp"]
-cosmo_df["z"] = np.exp(-cosmo_df["x"]) - 1 # 1+z=1/a, where 1/a=exp(-x)
 
 # Scale data to proper units
 cosmo_df["eta"] = cosmo_df["eta"] / Mpc
@@ -44,10 +46,13 @@ cosmo_df["dA"] = cosmo_df["dA"] / Mpc
 
 ## eta
 plt.figure()
-plt.title("$\\eta(x) \\; (Mpc)$")
-sns.lineplot(data=cosmo_df, x="x", y="eta")
-plt.axvline(x=0, linestyle="dashed", color="black")
+plt.title("Evolution of conformal time")
+plt.plot(a, cosmo_df["eta"])
+plt.axvline(x=1, linestyle="dashed", color="black", label="Today")
+plt.xscale("log")
 plt.yscale("log")
+plt.xlabel("Scalefactor $a$")
+plt.ylabel("$\\eta$ (Mpc)")
 plt.savefig("Figures/BC_eta.pdf")
 
 ## Hp
@@ -88,6 +93,7 @@ plt.title("$d_L \; , \; \\chi \; , \; d_A$")
 sns.lineplot(data=cosmo_df, x="z", y="dL", label="$d_L$")
 sns.lineplot(data=cosmo_df, x="z", y="chi", label="$\\chi$")
 sns.lineplot(data=cosmo_df, x="z", y="dA", label="$d_A$")
+plt.ylabel("Distance")
 plt.xscale("log")
 plt.yscale("log")
 plt.savefig("Figures/BC_distance.pdf")

@@ -48,8 +48,12 @@ extern struct ConstantsAndUnits {
   const double k_max = 0.3     / Mpc;
   
   // Min and max x-value
+  // Use these when not considering supernova data
   const double x_start = log(1e-8);
-  const double x_end   = 0.0;
+  const double x_end   = 2.0;
+  // Use these when considering supernova data
+  // const double x_start = -log(1.0 + 1.300);
+  // const double x_end   = 0.0;
 
   // Include polarization and/or neutrinos?
   const bool polarization  = true;

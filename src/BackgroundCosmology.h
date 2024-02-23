@@ -73,6 +73,7 @@ class BackgroundCosmology{
     double get_h() const;
     double get_Neff() const;
     double get_TCMB(double x = 0.0) const;
+    double get_z(double x = 0.0) const;
 
     // Distance measures
     double get_curvature_scale_factor_of_chi(double chi) const;

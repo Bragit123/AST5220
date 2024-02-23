@@ -35,13 +35,14 @@ BackgroundCosmology::BackgroundCosmology(
 
 // Solve the background
 void BackgroundCosmology::solve(){
-  Utils::StartTiming("Eta");
+  // Utils::StartTiming("Eta");
     
   //=============================================================================
   // TODO: Set the range of x and the number of points for the splines
   // For this Utils::linspace(x_start, x_end, npts) is useful
   //=============================================================================
   double npts = 100;
+  std::cout << x_start << " : " << x_end << std::endl;
   Vector x_array = Utils::linspace(x_start, x_end, npts);
 
   // The ODE for deta/dx
@@ -61,18 +62,18 @@ void BackgroundCosmology::solve(){
   // TODO: Set the initial condition, set up the ODE system, solve and make
   // the spline eta_of_x_spline 
   //=============================================================================
-  Vector eta_ini{1.0};
+  Vector eta_ini{Constants.c/Hp_of_x(x_start)};
   ODESolver ode;
   ode.solve(detadx, x_array, eta_ini);
 
   auto eta_array = ode.get_data_by_component(0);
 
   eta_of_x_spline.create(x_array, eta_array, "eta");
-  Utils::EndTiming("Eta");
+  // Utils::EndTiming("Eta");
 
 
   // Cosmic time t
-  Utils::StartTiming("t");
+  // Utils::StartTiming("t");
 
   ODEFunction dtdx = [&](double x, const double *t, double *dtdx){
 
@@ -93,7 +94,7 @@ void BackgroundCosmology::solve(){
 
   t_of_x_spline.create(x_array, t_array, "t");
 
-  Utils::EndTiming("t");
+  // Utils::EndTiming("t");
 }
 
 //====================================================
@@ -272,6 +273,10 @@ double BackgroundCosmology::get_TCMB(double x) const{
   return TCMB * exp(-x); 
 }
 
+double BackgroundCosmology::get_z(double x) const{
+  return exp(-x)-1;
+}
+
 //====================================================
 // Print out info about the class
 //====================================================
@@ -297,15 +302,18 @@ void BackgroundCosmology::info() const{
 // Output some data to file
 //====================================================
 void BackgroundCosmology::output(const std::string filename) const{
-  const double x_min = -10.0;
-  const double x_max =  0.0;
-  const int    n_pts =  100;
+  const double x_min = x_start;
+  const double x_max = x_end;
+  const int    n_pts = 100;
   
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);
+  std::cout << x_min << std::endl;
+  std::cout << x_max << std::endl;
 
   std::ofstream fp(filename.c_str());
   auto print_data = [&] (const double x) {
     fp << x                                 << " ";
+    fp << get_z(x)                          << " ";
     fp << eta_of_x(x)                       << " ";
     fp << t_of_x(x)                         << " ";
     fp << H_of_x(x)/get_H0()                << " ";
@@ -320,7 +328,7 @@ void BackgroundCosmology::output(const std::string filename) const{
     fp << get_OmegaLambda(x)                << " ";
     fp << get_OmegaR(x)                     << " ";
     fp << get_OmegaNu(x)                    << " ";
-    fp << get_OmegaK(x); // Removed [<< " "] because it created an extra column of NaNs pandas
+    fp << get_OmegaK(x); // Removed [<< " "] because it created an extra column of NaNs in pandas
     fp <<"\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
