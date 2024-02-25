@@ -42,41 +42,49 @@ OmegaK_min = OmegaK[chi2_min_arg]
 OmegaLambda_min = OmegaLambda[chi2_min_arg]
 h_min = h[chi2_min_arg]
 
-# Good values (1 sigma confidence region)
-good_condition = chi2 < chi2_min + 3.53
-chi2_good = chi2[good_condition]
-OmegaM_good = OmegaM[good_condition]
-OmegaK_good = OmegaK[good_condition]
-OmegaLambda_good = OmegaLambda[good_condition]
-h_good = h[good_condition]
+# 1 sigma confidence values
+sigma1_condition = chi2 < chi2_min + 3.53
+chi2_sigma1 = chi2[sigma1_condition]
+OmegaM_sigma1 = OmegaM[sigma1_condition]
+OmegaK_sigma1 = OmegaK[sigma1_condition]
+OmegaLambda_sigma1 = OmegaLambda[sigma1_condition]
+h_sigma1 = h[sigma1_condition]
+
+# 2 sigma confidence values
+sigma2_condition = chi2 < chi2_min + 8.02
+chi2_sigma2 = chi2[sigma2_condition]
+OmegaM_sigma2 = OmegaM[sigma2_condition]
+OmegaK_sigma2 = OmegaK[sigma2_condition]
+OmegaLambda_sigma2 = OmegaLambda[sigma2_condition]
+h_sigma2 = h[sigma2_condition]
 
 # Standard deviations
-chi2_std = np.std(chi2_good)
-OmegaM_std = np.std(OmegaM_good)
-OmegaK_std = np.std(OmegaK_good)
-OmegaLambda_std = np.std(OmegaLambda_good)
-h_std = np.std(h_good)
+chi2_std = np.std(chi2_sigma1)
+OmegaM_std = np.std(OmegaM_sigma1)
+OmegaK_std = np.std(OmegaK_sigma1)
+OmegaLambda_std = np.std(OmegaLambda_sigma1)
+h_std = np.std(h_sigma1)
 
 # Mean values
-chi2_mean = np.mean(chi2_good)
-OmegaM_mean = np.mean(OmegaM_good)
-OmegaK_mean = np.mean(OmegaK_good)
-OmegaLambda_mean = np.mean(OmegaLambda_good)
-h_mean = np.mean(h_good)
+chi2_mean = np.mean(chi2_sigma1)
+OmegaM_mean = np.mean(OmegaM_sigma1)
+OmegaK_mean = np.mean(OmegaK_sigma1)
+OmegaLambda_mean = np.mean(OmegaLambda_sigma1)
+h_mean = np.mean(h_sigma1)
 
 # Find values to consider for the Gaussian
 n_points = 100
-OmegaM_range = np.linspace(np.min(OmegaM_good), np.max(OmegaM_good), n_points)
-OmegaK_range = np.linspace(np.min(OmegaK_good), np.max(OmegaK_good), n_points)
-OmegaLambda_range = np.linspace(np.min(OmegaLambda_good), np.max(OmegaLambda_good), n_points)
-h_range = np.linspace(np.min(h_good), np.max(h_good), n_points)
+OmegaM_range = np.linspace(np.min(OmegaM_sigma1), np.max(OmegaM_sigma1), n_points)
+OmegaK_range = np.linspace(np.min(OmegaK_sigma1), np.max(OmegaK_sigma1), n_points)
+OmegaLambda_range = np.linspace(np.min(OmegaLambda_sigma1), np.max(OmegaLambda_sigma1), n_points)
+h_range = np.linspace(np.min(h_sigma1), np.max(h_sigma1), n_points)
 
 n_bins = 30 # Number of bins to use for histograms
 
 ## OmegaM
 plt.figure()
 plt.title("Posterior for $\\Omega_M$")
-plt.hist(x=OmegaM_good, bins=n_bins, density=True)
+plt.hist(x=OmegaM_sigma1, bins=n_bins, density=True)
 plt.plot(OmegaM_range, gaussian(OmegaM_range, OmegaM_mean, OmegaM_std))
 plt.axvline(x=OmegaM_min, color="black", linestyle="dashed", label="Planck best-fit value")
 plt.xlabel("$\\Omega_M$")
@@ -87,7 +95,7 @@ plt.savefig("Figures/Milestone_1/supernova_OmegaM.pdf")
 ## OmegaK
 plt.figure()
 plt.title("Posterior for $\\Omega_K$")
-plt.hist(x=OmegaK_good, bins=n_bins, density=True)
+plt.hist(x=OmegaK_sigma1, bins=n_bins, density=True)
 plt.plot(OmegaK_range, gaussian(OmegaK_range, OmegaK_mean, OmegaK_std))
 plt.axvline(x=OmegaK_min, color="black", linestyle="dashed", label="Planck best-fit value")
 plt.xlabel("$\\Omega_K$")
@@ -98,7 +106,7 @@ plt.savefig("Figures/Milestone_1/supernova_OmegaK.pdf")
 ## OmegaLambda
 plt.figure()
 plt.title("Posterior for $\\Omega_\\Lambda$")
-plt.hist(x=OmegaLambda_good, bins=n_bins, density=True)
+plt.hist(x=OmegaLambda_sigma1, bins=n_bins, density=True)
 plt.plot(OmegaLambda_range, gaussian(OmegaLambda_range, OmegaLambda_mean, OmegaLambda_std))
 plt.axvline(x=OmegaLambda_min, color="black", linestyle="dashed", label="Planck best-fit value")
 plt.xlabel("$\\Omega_\\Lambda$")
@@ -109,7 +117,7 @@ plt.savefig("Figures/Milestone_1/supernova_OmegaLambda.pdf")
 ## h
 plt.figure()
 plt.title("Posterior for $h$")
-plt.hist(x=h_good, bins=n_bins, density=True)
+plt.hist(x=h_sigma1, bins=n_bins, density=True)
 plt.plot(h_range, gaussian(h_range, h_mean, h_std))
 plt.axvline(x=h_min, color="black", linestyle="dashed", label="Planck best-fit value")
 plt.xlabel("$h$")
@@ -117,12 +125,22 @@ plt.ylabel("Probability density")
 plt.legend()
 plt.savefig("Figures/Milestone_1/supernova_h.pdf")
 
-## Scatterplot
+## Scatterplot MK
 plt.figure()
-sns.scatterplot(x=OmegaM_good, y=OmegaK_good)
+sns.scatterplot(x=OmegaM_sigma1, y=OmegaK_sigma1)
 plt.xlabel("$\\Omega_M$")
 plt.ylabel("$\\Omega_K$")
-plt.savefig("Figures/Milestone_1/supernova_scatter.pdf")
+plt.savefig("Figures/Milestone_1/supernova_scatter_MK.pdf")
+
+## Scatterplot ML
+plt.figure()
+plt.scatter(x=OmegaM_sigma2, y=OmegaLambda_sigma2, label="$2\\sigma$ constraint")
+plt.scatter(x=OmegaM_sigma1, y=OmegaLambda_sigma1, label="$1\\sigma$ constraint")
+plt.plot([0.0,1.0], [1.0,0.0], color="black", linestyle="dashed", label="Flat universe")
+plt.xlabel("$\\Omega_M$")
+plt.ylabel("$\\Omega_\\Lambda$")
+plt.legend()
+plt.savefig("Figures/Milestone_1/supernova_scatter_MLambda.pdf")
 
 # Units (copied from utils.h)
 Mpc = 3.08567758e22
