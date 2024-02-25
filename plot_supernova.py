@@ -28,16 +28,6 @@ cosmo_df.columns = [
     "OmegaK"
 ]
 
-# supernova_fit = pd.read_csv("results_supernovafitting.txt", sep="\s+", comment="#", skiprows=range(1,200), header=None)
-# supernova_fit.columns = ["chi2", "h", "OmegaM", "OmegaK"]
-# chi2_min_ind = np.argmin(supernova_fit["chi2"])
-# chi2_min = np.min(supernova_fit["chi2"][chi2_min_ind])
-# good_indices = 
-
-# OmegaM = supernova_fit["OmegaM"]
-# OmegaK = supernova_fit["OmegaK"]
-# print(supernova_fit)
-
 def gaussian(x, mu, sigma):
     return 1/(sigma*np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2 / (2*sigma**2))
 
@@ -92,7 +82,7 @@ plt.axvline(x=OmegaM_min, color="black", linestyle="dashed", label="Planck best-
 plt.xlabel("$\\Omega_M$")
 plt.ylabel("Probability density")
 plt.legend()
-plt.savefig("Figures/supernova_OmegaM.pdf")
+plt.savefig("Figures/Milestone_1/supernova_OmegaM.pdf")
 
 ## OmegaK
 plt.figure()
@@ -103,7 +93,7 @@ plt.axvline(x=OmegaK_min, color="black", linestyle="dashed", label="Planck best-
 plt.xlabel("$\\Omega_K$")
 plt.ylabel("Probability density")
 plt.legend()
-plt.savefig("Figures/supernova_OmegaK.pdf")
+plt.savefig("Figures/Milestone_1/supernova_OmegaK.pdf")
 
 ## OmegaLambda
 plt.figure()
@@ -114,7 +104,7 @@ plt.axvline(x=OmegaLambda_min, color="black", linestyle="dashed", label="Planck 
 plt.xlabel("$\\Omega_\\Lambda$")
 plt.ylabel("Probability density")
 plt.legend()
-plt.savefig("Figures/supernova_OmegaLambda.pdf")
+plt.savefig("Figures/Milestone_1/supernova_OmegaLambda.pdf")
 
 ## h
 plt.figure()
@@ -125,14 +115,14 @@ plt.axvline(x=h_min, color="black", linestyle="dashed", label="Planck best-fit v
 plt.xlabel("$h$")
 plt.ylabel("Probability density")
 plt.legend()
-plt.savefig("Figures/supernova_h.pdf")
+plt.savefig("Figures/Milestone_1/supernova_h.pdf")
 
 ## Scatterplot
 plt.figure()
 sns.scatterplot(x=OmegaM_good, y=OmegaK_good)
 plt.xlabel("$\\Omega_M$")
 plt.ylabel("$\\Omega_K$")
-plt.savefig("Figures/supernova_scatter.pdf")
+plt.savefig("Figures/Milestone_1/supernova_scatter.pdf")
 
 # Units (copied from utils.h)
 Mpc = 3.08567758e22
@@ -151,4 +141,4 @@ plt.xscale("log")
 plt.ylabel("Distance $d_L/z$ (Gpc)")
 plt.xlabel("Redshift z")
 plt.legend()
-plt.savefig("Figures/supernova_dL.pdf")
+plt.savefig("Figures/Milestone_1/supernova_dL.pdf")

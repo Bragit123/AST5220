@@ -57,7 +57,7 @@ plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\eta$ (Mpc)")
 plt.legend()
-plt.savefig("Figures/BC_eta.pdf")
+plt.savefig("Figures/Milestone_1/BC_eta.pdf")
 
 ## Hp
 plt.figure()
@@ -69,7 +69,7 @@ plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\mathcal{H}(x) \\; (\\frac{100 km/s}{Mpc})$")
 plt.legend()
-plt.savefig("Figures/BC_Hp.pdf")
+plt.savefig("Figures/Milestone_1/BC_Hp.pdf")
 
 ## dHpdx / Hp
 plt.figure()
@@ -82,7 +82,7 @@ plt.xscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\frac{1}{\\mathcal{H}} \\frac{d\\mathcal{H}}{dx}$ , $\\frac{1}{\\mathcal{H}} \\frac{d^2\\mathcal{H}}{dx^2}$")
 plt.legend()
-plt.savefig("Figures/BC_Hp_derivative.pdf")
+plt.savefig("Figures/Milestone_1/BC_Hp_derivative.pdf")
 
 ## H/H0
 plt.figure()
@@ -93,7 +93,7 @@ plt.xscale("log")
 plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$H/H_0$")
-plt.savefig("Figures/BC_H_H0.pdf")
+plt.savefig("Figures/Milestone_1/BC_H_H0.pdf")
 
 ## eta*Hp/c
 # Ignore first and last part:
@@ -107,7 +107,7 @@ plt.axvline(x=1, linestyle="dashed", color="black")
 plt.xscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\frac{\\eta(x) \\mathcal{H}(x)}{c}$")
-plt.savefig("Figures/BC_etaHp_c.pdf")
+plt.savefig("Figures/Milestone_1/BC_etaHp_c.pdf")
 
 ## Distance measures
 plt.figure()
@@ -121,7 +121,7 @@ plt.ylabel("Distance (Mpc)")
 plt.xscale("log")
 plt.yscale("log")
 plt.legend()
-plt.savefig("Figures/BC_distance.pdf")
+plt.savefig("Figures/Milestone_1/BC_distance.pdf")
 
 ## Omega
 plt.figure()
@@ -135,4 +135,4 @@ plt.xscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\Omega$")
 plt.legend()
-plt.savefig("Figures/BC_Omega.pdf")
+plt.savefig("Figures/Milestone_1/BC_Omega.pdf")
