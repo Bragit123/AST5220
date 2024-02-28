@@ -30,6 +30,7 @@ H0_over_h = 100 * 1e3 / Mpc
 c = 3e8
 h = 0.67
 H0 = H0_over_h * h
+Gyr = 1e9*365*24*60*60
 
 # Things to plot
 a = np.exp(cosmo_df["x"])
@@ -46,11 +47,44 @@ cosmo_df["Hp"] = cosmo_df["Hp"] / H0_over_h
 cosmo_df["dL"] = cosmo_df["dL"] / Mpc
 cosmo_df["chi"] = cosmo_df["chi"] / Mpc
 cosmo_df["dA"] = cosmo_df["dA"] / Mpc
+cosmo_df["t"] = cosmo_df["t"] / Gyr
+
+### Time-values at different epochs
+## Radiation-Matter equality
+arg_RM_eq = np.argmin(np.abs(OmegaRad[a<1] - OmegaMat[a<1])) # Radiation-Matter equality
+a_RM_eq = a[arg_RM_eq]
+z_RM_eq = cosmo_df["z"][arg_RM_eq]
+t_RM_eq = cosmo_df["t"][arg_RM_eq]
+eta_RM_eq = cosmo_df["eta"][arg_RM_eq]
+
+## Matter-Dark energy equality
+ind_start = 40 # Matter and dark energy have equal densities 0 in the beginning, so must ignore first indices.
+ML_diff = np.abs(OmegaMat[ind_start:]-cosmo_df["OmegaLambda"][ind_start:])
+arg_ML_eq = np.argmin(ML_diff) + ind_start # Matter-Dark energy equality
+a_ML_eq = a[arg_ML_eq]
+z_ML_eq = cosmo_df["z"][arg_ML_eq]
+t_ML_eq = cosmo_df["t"][arg_ML_eq]
+eta_ML_eq = cosmo_df["eta"][arg_ML_eq]
+
+## Universe starts accelerating
+arg_acc = np.argmin(np.abs(cosmo_df["dHpdx"])) # Matter-Dark energy equality
+a_acc = a[arg_acc]
+z_acc = cosmo_df["z"][arg_acc]
+t_acc = cosmo_df["t"][arg_acc]
+eta_acc = cosmo_df["eta"][arg_acc]
+
+## Today
+arg_today = np.argmin(np.abs(a-1))
+a_today = a[arg_today]
+z_today = cosmo_df["z"][arg_today]
+t_today = cosmo_df["t"][arg_today]
+eta_today = cosmo_df["eta"][arg_today]
+
 
 ## eta
 plt.figure()
 plt.title("Evolution of conformal time")
-plt.plot(a, cosmo_df["eta"])
+plt.plot(a, cosmo_df["eta"]/c)
 plt.axvline(x=1, linestyle="dashed", color="black", label="Today ($a=1$)")
 plt.xscale("log")
 plt.yscale("log")
@@ -64,6 +98,7 @@ plt.figure()
 plt.title("Evolution of conformal Hubble factor")
 plt.plot(a, cosmo_df["Hp"])
 plt.axvline(x=1, linestyle="dashed", color="black", label="Today ($a=1$)")
+plt.axvline(x=a_acc, linestyle="dotted", color="black")
 plt.xscale("log")
 plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
@@ -78,6 +113,7 @@ plt.plot(a, dHpdx_Hp, label="$\\frac{1}{\\mathcal{H}} \\frac{d\\mathcal{H}}{dx}$
 plt.plot(a, ddHpddx_Hp, label="$\\frac{1}{\\mathcal{H}} \\frac{d^2\\mathcal{H}}{dx^2}$")
 plt.axhline(y=0, linestyle="dashed", color="black")
 plt.axvline(x=1, linestyle="dashed", color="black")
+plt.axvline(x=a_acc, linestyle="dotted", color="black")
 plt.xscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\frac{1}{\\mathcal{H}} \\frac{d\\mathcal{H}}{dx}$ , $\\frac{1}{\\mathcal{H}} \\frac{d^2\\mathcal{H}}{dx^2}$")
@@ -123,16 +159,70 @@ plt.yscale("log")
 plt.legend()
 plt.savefig("Figures/Milestone_1/BC_distance.pdf")
 
+## Cosmic time
+plt.figure()
+plt.title("Evolution of cosmic time")
+plt.plot(a, cosmo_df["t"])
+plt.axvline(x=1, linestyle="dashed", color="black", label="Today ($a=1$)")
+plt.axvline(x=a_acc, linestyle="dashed", color="gray")
+plt.xscale("log")
+plt.yscale("log")
+plt.xlabel("Scalefactor $a$")
+plt.ylabel("Cosmic time $t$ (Gyr)")
+plt.legend()
+plt.savefig("Figures/Milestone_1/BC_t.pdf")
+
+## a(t)
+plt.figure()
+plt.title("Evolution of cosmic time")
+plt.plot(cosmo_df["t"], a)
+plt.axhline(y=1, linestyle="dashed", color="black", label="Today ($a=1$)")
+plt.axhline(y=a_acc, linestyle="dashed", color="gray")
+plt.yscale("log")
+plt.xscale("log")
+plt.xlabel("Cosmic time $t$ (Gyr)")
+plt.ylabel("Scalefactor $a$")
+plt.legend()
+plt.savefig("Figures/Milestone_1/BC_a.pdf")
+
 ## Omega
 plt.figure()
 plt.title("Evolution of density parameters")
 plt.plot(a, OmegaMat, label="$\\Omega_M=\\Omega_b+\\Omega_{CDM}$")
 plt.plot(a, OmegaRad, label="$\\Omega_R=\\Omega_\\gamma+\\Omega_\\nu$")
 plt.plot(a, cosmo_df["OmegaLambda"], label="$\\Omega_\\Lambda$")
-plt.plot(a, cosmo_df["OmegaK"], label="$\\Omega_K$")
-plt.axvline(x=1, linestyle="dashed", color="black")
+# plt.plot(a, cosmo_df["OmegaK"], label="$\\Omega_K$")
+plt.axvline(x=1, linestyle="dashed", color="black", label="Today ($a=1$)")
+plt.axvline(x=a_RM_eq, linestyle="dashed", color="gray", label="$\\Omega_M = \\Omega_R$")
+plt.axvline(x=a_ML_eq, linestyle="dotted", color="gray", label="$\\Omega_M = \\Omega_\\Lambda$")
+plt.axvline(x=a_acc, linestyle="dotted", color="black", label="Acceleration starts")
 plt.xscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("$\\Omega$")
 plt.legend()
 plt.savefig("Figures/Milestone_1/BC_Omega.pdf")
+
+
+print("Radiation-matter equality")
+print(f"  a = {a_RM_eq:.5f}")
+print(f"  z = {z_RM_eq:4.5f}")
+print(f"  t = {t_RM_eq:.5f}")
+print(f"  eta = {eta_RM_eq:.5f}")
+
+print("Matter-dark energy equality")
+print(f"  a = {a_ML_eq:.5f}")
+print(f"  z = {z_ML_eq:4.5f}")
+print(f"  t = {t_ML_eq:.5f}")
+print(f"  eta = {eta_ML_eq:.5f}")
+
+print("Universe begins to accelerate")
+print(f"  a = {a_acc:.5f}")
+print(f"  z = {z_acc:4.5f}")
+print(f"  t = {t_acc:.5f}")
+print(f"  eta = {eta_acc:.5f}")
+
+print("Today")
+print(f"  a = {a_today:.5f}")
+print(f"  z = {z_today:4.5f}")
+print(f"  t = {t_today:.5f}")
+print(f"  eta = {eta_today:.5f}")

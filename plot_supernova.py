@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
-import seaborn as sns
+# import seaborn as sns
 
 supernova_data = pd.read_csv("data/supernovadata.txt", sep="\s+", comment="#", header=None)
 supernova_data.columns = ["z", "dL", "error"]
@@ -33,6 +33,12 @@ def gaussian(x, mu, sigma):
 
 chi2, h, OmegaM, OmegaK = np.loadtxt("results_supernovafitting.txt", skiprows=200, comments="#", unpack=True) # Skip burnin of chains
 OmegaLambda = 1 - OmegaM - OmegaK # Assuming OmegaR = OmegaNu = 0
+
+# Units (copied from utils.h)
+Mpc = 3.08567758e22
+H0_over_h = 100 * 1e3 / Mpc
+c = 3e8
+Gpc = 1000 * Mpc
 
 # Find best values
 chi2_min_arg = np.argmin(chi2)
@@ -114,43 +120,29 @@ plt.ylabel("Probability density")
 plt.legend()
 plt.savefig("Figures/Milestone_1/supernova_OmegaLambda.pdf")
 
-## h
+## H0
 plt.figure()
-plt.title("Posterior for $h$")
+plt.title("Posterior PDF for $H_0$")
 plt.hist(x=h_sigma1, bins=n_bins, density=True)
 plt.plot(h_range, gaussian(h_range, h_mean, h_std))
 plt.axvline(x=h_min, color="black", linestyle="dashed", label="Planck best-fit value")
-plt.xlabel("$h$")
+plt.xlabel("$H_0$ (100km/Mpc)")
 plt.ylabel("Probability density")
 plt.legend()
-plt.savefig("Figures/Milestone_1/supernova_h.pdf")
-
-## Scatterplot MK
-plt.figure()
-sns.scatterplot(x=OmegaM_sigma1, y=OmegaK_sigma1)
-plt.xlabel("$\\Omega_M$")
-plt.ylabel("$\\Omega_K$")
-plt.savefig("Figures/Milestone_1/supernova_scatter_MK.pdf")
+plt.savefig("Figures/Milestone_1/supernova_H0.pdf")
 
 ## Scatterplot ML
 plt.figure()
-plt.scatter(x=OmegaM_sigma2, y=OmegaLambda_sigma2, label="$2\\sigma$ constraint")
-plt.scatter(x=OmegaM_sigma1, y=OmegaLambda_sigma1, label="$1\\sigma$ constraint")
+plt.scatter(x=OmegaM_sigma2, y=OmegaLambda_sigma2, label="$2\\sigma$ constraint", rasterized=True)
+plt.scatter(x=OmegaM_sigma1, y=OmegaLambda_sigma1, label="$1\\sigma$ constraint", rasterized=True)
 plt.plot([0.0,1.0], [1.0,0.0], color="black", linestyle="dashed", label="Flat universe")
 plt.xlabel("$\\Omega_M$")
 plt.ylabel("$\\Omega_\\Lambda$")
 plt.legend()
 plt.savefig("Figures/Milestone_1/supernova_scatter_MLambda.pdf")
 
-# Units (copied from utils.h)
-Mpc = 3.08567758e22
-H0_over_h = 100 * 1e3 / Mpc
-c = 3e8
-Gpc = 1000 * Mpc
-
-dL_Gpc = cosmo_df["dL"]/Gpc
-
 ## Luminosity distance
+dL_Gpc = cosmo_df["dL"]/Gpc
 plt.figure()
 plt.title("Luminosity distance compared to supernova data.")
 plt.errorbar(supernova_data["z"], supernova_data["dL"]/supernova_data["z"], yerr=supernova_data["error"]/supernova_data["z"], capsize=3, barsabove=True, fmt=".", label="Supernova data")
