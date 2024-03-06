@@ -4,21 +4,18 @@ AST5220.
 
 ## How to run the code
 To run the computations you must first compile the C++ code. Do this by running
-$ make
+> make
 in the terminal. After doing this you can run the code using
-$ ./cmb
+> ./cmb
 
 The plots are produced by running the different python scripts. The figures are
 stored in their respective milestone directory in the Figures/ directory.
 
 ### Milestone 1
 To produce the plots for milestone 1, run
-
-$ python3 plot_BC.py
-
+> python3 plot_BC.py
 and
-
-$ python3 plot_supernova.py
+> python3 plot_supernova.py
 
 Note: In Utils.h, there are two options to choose from for x_start and x_end.
 These values are the range of x-values that will be considered when doing the
