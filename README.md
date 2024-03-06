@@ -13,8 +13,11 @@ stored in their respective milestone directory in the Figures/ directory.
 
 ### Milestone 1
 To produce the plots for milestone 1, run
+
 $ python3 plot_BC.py
+
 and
+
 $ python3 plot_supernova.py
 
 Note: In Utils.h, there are two options to choose from for x_start and x_end.
