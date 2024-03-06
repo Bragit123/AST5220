@@ -3,10 +3,7 @@ This repo contains the code used to compute the CMB spectrum in my project in
 AST5220.
 
 ## How to run the code
-To run the computations you must first compile the C++ code. Do this by running
-
-> make
-
+To run the computations you must first compile the C++ code. Do this by running ´make´
 in the terminal. After doing this you can run the code using
 
 > ./cmb
