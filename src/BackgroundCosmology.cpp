@@ -277,6 +277,15 @@ double BackgroundCosmology::get_z(double x) const{
   return exp(-x)-1;
 }
 
+double BackgroundCosmology::get_OmegaM(double x) const{
+  return get_OmegaB(x) + get_OmegaCDM(x);
+}
+
+double BackgroundCosmology::get_OmegaRtot(double x) const{
+  return get_OmegaR(x) + get_OmegaNu(x);
+}
+
+
 //====================================================
 // Print out info about the class
 //====================================================
@@ -294,7 +303,56 @@ void BackgroundCosmology::info() const{
   std::cout << "h:           " << h           << "\n";
   std::cout << "TCMB:        " << TCMB        << "\n";
   std::cout << "OmegaTotal   " << OmegaB+OmegaCDM+OmegaLambda+OmegaK+OmegaNu+OmegaR << "\n";
-  std::cout << "t0 (Gyr):    " << t_of_x(0) / Gyr << "\n";
+
+
+  const double x_min = x_start;
+  const double x_max = x_end;
+  const int    n_pts = 100;
+  Vector x_array = Utils::linspace(x_min, x_max, n_pts);
+  
+  Vector OmegaMR_array(n_pts, 0.0);
+  Vector OmegaMDE_array(n_pts, 0.0);
+
+  for (int i=0; i < n_pts; i++) {
+    double xi = x_array.at(i);
+    
+    // Find Matter-radiation spline
+    double OmegaMR_i = get_OmegaM(xi) - get_OmegaRtot(xi);
+    if (OmegaMR_i < 0.0) {
+      OmegaMR_i = -OmegaMR_i; // Want difference in absolute value
+    }
+    OmegaMR_array.at(i) = OmegaMR_i;
+
+    // Find Matter-dark energy spline
+    double OmegaMDE_i = get_OmegaM(xi) - get_OmegaLambda(xi);
+    if (OmegaMDE_i < 0.0) {
+      OmegaMDE_i = -OmegaMDE_i; // Want difference in absolute value
+    }
+    OmegaMDE_array.at(i) = OmegaMDE_i;
+  }
+
+  /*
+  std::cout << "1" << std::endl;
+  Spline OmegaMR(x_array, OmegaMR_array);
+  std::cout << "2" << std::endl;
+  std::cout << OmegaMR(exp(3.0*pow(10,-4))) << std::endl;
+  std::cout << "3" << std::endl;
+  double x_MR = Utils::binary_search_for_value(OmegaMR, 0.03);
+  std::cout << "4" << std::endl;
+
+  std::cout << "Matter-Radiation equality" << "\n";
+  std::cout << "  x = " << x_MR << "\n";
+
+  std::cout << "Universe begins to accelerate" << "\n";
+  
+  std::cout << "Matter-Dark energy equality" << "\n";
+  */
+
+  std::cout << "Today" << "\n";
+  std::cout << "  a:       " << 1 << "\n";
+  std::cout << "  z:       " << get_z(0) << "\n";
+  std::cout << "  t (Gyr): " << t_of_x(0) / Gyr << "\n";
+  std::cout << "  eta:     " << eta_of_x(0) / Gyr << "\n";
   std::cout << std::endl;
 } 
 
