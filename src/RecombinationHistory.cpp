@@ -9,7 +9,9 @@ RecombinationHistory::RecombinationHistory(
     double Yp) :
   cosmo(cosmo),
   Yp(Yp)
-{}
+{
+
+}
 
 //====================================================
 // Do all the solving we need to do
@@ -34,9 +36,12 @@ void RecombinationHistory::solve_number_density_electrons(){
   //=============================================================================
   // TODO: Set up x-array and make arrays to store X_e(x) and n_e(x) on
   //=============================================================================
-  Vector x_array;
-  Vector Xe_arr;
-  Vector ne_arr;
+  const double x_min = x_start;
+  const double x_max = x_end;
+  
+  Vector x_array = Utils::linspace(x_min, x_max, npts_rec_arrays);
+  Vector Xe_arr(npts_rec_arrays);
+  Vector ne_arr(npts_rec_arrays);
 
   // Calculate recombination history
   bool saha_regime = true;
@@ -46,6 +51,7 @@ void RecombinationHistory::solve_number_density_electrons(){
     // TODO: Get X_e from solving the Saha equation so
     // implement the function electron_fraction_from_saha_equation
     //==============================================================
+
     auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i]);
 
     // Electron fraction and number density
@@ -115,21 +121,33 @@ std::pair<double,double> RecombinationHistory::electron_fraction_from_saha_equat
   const double epsilon_0   = Constants.epsilon_0;
   const double H0_over_h   = Constants.H0_over_h;
 
-  // Fetch cosmological parameters
-  //const double OmegaB      = cosmo->get_OmegaB();
-  //...
-  //...
-
-  // Electron fraction and number density
-  double Xe = 0.0;
-  double ne = 0.0;
+  // // Fetch cosmological parameters
+  const double H0 = cosmo->get_H0();
+  const double OmegaB0 = cosmo->get_OmegaB();
+  const double TCMB0 = cosmo->get_TCMB();
+  
+  // // Compute parameters
+  const double rho_c0 = 3 * H0*H0 / (8 * M_PI * G);
+  double nb = OmegaB0 * rho_c0 / (m_H * pow(a, 3));
+  double Tb = TCMB0 / a;
   
   //=============================================================================
   // TODO: Compute Xe and ne from the Saha equation
   //=============================================================================
-  //...
-  //...
 
+  double coeff = pow(k_b, 3/2) / pow(hbar, 3) * 1/nb * pow(m_e*Tb / (2*M_PI), 3/2) * exp(-epsilon_0 / (k_b * Tb));
+  
+  double Xe = 0.0;
+  if (coeff >= 1e-4) {
+    // Quadratic formula with a=1, b=coeff and c=-coeff. Ignore negative solutions
+    Xe = (-coeff + sqrt(coeff*coeff + 4*coeff)) / 2;
+  } else {
+    // Approximation for sqrt() if coeff << 1
+    Xe = (-coeff + 2 * sqrt(coeff) * (1 + coeff/8)) / 2;
+  }
+  double ne = Xe * nb; // Ignore heavier elements than hydrogen, so nH = nb
+
+  // Return electron fraction and number density
   return std::pair<double,double>(Xe, ne);
 }
 
@@ -154,16 +172,27 @@ int RecombinationHistory::rhs_peebles_ode(double x, const double *Xe, double *dX
   const double epsilon_0   = Constants.epsilon_0;
 
   // Cosmological parameters
-  // const double OmegaB      = cosmo->get_OmegaB();
-  // ...
-  // ...
+  const double H = cosmo->H_of_x(x);
 
   //=============================================================================
   // TODO: Write the expression for dXedx
   //=============================================================================
-  //...
-  //...
-  
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
+  double Cr = lambda_2s1s + lambda_alpha;
   dXedx[0] = 0.0;
 
   return GSL_SUCCESS;
