@@ -172,27 +172,31 @@ int RecombinationHistory::rhs_peebles_ode(double x, const double *Xe, double *dX
   const double epsilon_0   = Constants.epsilon_0;
 
   // Cosmological parameters
-  const double H = cosmo->H_of_x(x);
+  const double H0 = cosmo->get_H0();
+  double H = cosmo->H_of_x(x);
+  const double TCMB0 = cosmo->get_TCMB();
+  const double OmegaB0 = cosmo->get_OmegaB();
+
+  double Tb = TCMB0 / a;
 
   //=============================================================================
   // TODO: Write the expression for dXedx
   //=============================================================================
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  //////////////////// FORTSETT HER! IKKE FERDIG MED Cr /////////////////////
-  double Cr = lambda_2s1s + lambda_alpha;
+  double nH = 3 * H0*H0 * OmegaB0 / (8 * M_PI * G * m_H * pow(a, 3));
+  double n_1s = (1.0 - X_e) * nH;
+  
+  double alpha = 1 / 137.0359992; // Fine structure constant
+  double phi2 = 0.448 * log(epsilon_0 / (k_b * Tb));
+  double alpha2 = hbar*hbar / (c * sqrt(k_b)) * 64*M_PI / sqrt(27*M_PI) * alpha*alpha / (m_e*m_e) * sqrt(epsilon_0/Tb) * phi2;
+
+  double beta_coeff = pow(k_b, 3/2) / pow(hbar, 3) * alpha2 * pow(m_e*Tb / (2 * M_PI), 3/2);
+  double beta = beta_coeff * exp(-epsilon_0/(k_b*Tb));
+  // Write beta2 explicity instead of in terms of beta to avoid overflow in exponent.
+  double beta2 = beta_coeff * exp(-epsilon_0/(4*k_b*Tb));
+
+  double lambda_alpha = 1/pow(hbar*c, 3) * H * pow(3*epsilon_0, 3) / (pow(8*M_PI, 2) * n_1s);
+  double lambda_2s1s_alpha = lambda_2s1s + lambda_alpha;
+  double Cr = (lambda_2s1s_alpha) / (lambda_2s1s_alpha + beta2);
   dXedx[0] = 0.0;
 
   return GSL_SUCCESS;
