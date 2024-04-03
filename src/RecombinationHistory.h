@@ -19,11 +19,14 @@ class RecombinationHistory{
     double Yp;
  
     // The start and end points for recombination arrays (can be modified)
-    const double x_start  = Constants.x_start;
+    // const double x_start  = Constants.x_start;
+    // const double x_end    = Constants.x_end;
+    const double x_start  = log(1e-6);
     const double x_end    = Constants.x_end;
     
     // Numbers of points of Xe,ne array (modify as you see fit)
     const int npts_rec_arrays = 4000;
+    // const int npts_rec_arrays = 100;
   
     // Xe for when to switch between Saha and Peebles
     const double Xe_saha_limit = 0.99;
@@ -50,6 +53,9 @@ class RecombinationHistory{
 
     // Splines contained in this class
     Spline log_Xe_of_x_spline{"Xe"};
+    Spline log_ne_of_x_spline{"ne"};
+    Spline log_Xe_saha_of_x_spline{"Xe_saha"};
+    Spline log_ne_saha_of_x_spline{"ne_saha"};
     Spline tau_of_x_spline{"tau"}; 
     Spline g_tilde_of_x_spline{"g"};  
 
@@ -79,6 +85,8 @@ class RecombinationHistory{
     double ddgddx_tilde_of_x(double x) const;
     double Xe_of_x(double x) const;
     double ne_of_x(double x) const;
+    double Xe_saha_of_x(double x) const;
+    double ne_saha_of_x(double x) const;
     double get_Yp() const;
 };
 
