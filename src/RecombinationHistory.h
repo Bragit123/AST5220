@@ -21,7 +21,9 @@ class RecombinationHistory{
     // The start and end points for recombination arrays (can be modified)
     // const double x_start  = Constants.x_start;
     // const double x_end    = Constants.x_end;
-    const double x_start  = log(1e-6);
+    // const double x_start  = log(1e-10);
+    // const double x_start  = -12;
+    const double x_start  = log(1e-5);
     const double x_end    = Constants.x_end;
     
     // Numbers of points of Xe,ne array (modify as you see fit)
@@ -56,8 +58,9 @@ class RecombinationHistory{
     Spline log_ne_of_x_spline{"ne"};
     Spline log_Xe_saha_of_x_spline{"Xe_saha"};
     Spline log_ne_saha_of_x_spline{"ne_saha"};
-    Spline tau_of_x_spline{"tau"}; 
-    Spline g_tilde_of_x_spline{"g"};  
+    Spline tau_of_x_spline{"tau"};
+    Spline g_tilde_of_x_spline{"g"};
+    Spline s_of_x_spline{"s"};
 
   public:
 
@@ -83,6 +86,7 @@ class RecombinationHistory{
     double g_tilde_of_x(double x) const;
     double dgdx_tilde_of_x(double x) const;
     double ddgddx_tilde_of_x(double x) const;
+    double s_of_x(double x) const;
     double Xe_of_x(double x) const;
     double ne_of_x(double x) const;
     double Xe_saha_of_x(double x) const;

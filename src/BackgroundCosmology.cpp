@@ -24,7 +24,7 @@ BackgroundCosmology::BackgroundCosmology(
   double OmegaR_denominator = 30 * pow(Constants.hbar, 3) * pow(Constants.c, 5) * 3 * pow(H0, 2);
   OmegaR = OmegaR_numerator / OmegaR_denominator;
 
-  OmegaNu = Neff * 7/8 * pow(4.0/11.0, 4.0/3.0) * OmegaR;
+  OmegaNu = Neff * 7.0/8.0 * pow(4.0/11.0, 4.0/3.0) * OmegaR;
 
   OmegaLambda = 1.0 - (OmegaK + OmegaB + OmegaCDM + OmegaR + OmegaNu);
 }
