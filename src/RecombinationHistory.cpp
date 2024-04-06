@@ -66,8 +66,6 @@ void RecombinationHistory::solve_number_density_electrons(){
     // Electron fraction and number density
     const double Xe_current = Xe_ne_data.first;
     const double ne_current = Xe_ne_data.second;
-    // std::cout << "x_array[i] = " << x_array[i] << std::endl;
-    // std::cout << "Xe_current = " << Xe_current << std::endl;
 
     Xe_saha_arr[i] = Xe_current;
     ne_saha_arr[i] = ne_current;
@@ -81,10 +79,8 @@ void RecombinationHistory::solve_number_density_electrons(){
       //=============================================================================
       // TODO: Store the result we got from the Saha equation
       //=============================================================================
-      // std::cout << "--- SAHA ---" << std::endl;
       Xe_arr[i] = Xe_current;
       ne_arr[i] = ne_current;
-      // std::cout << "Xe_arr[i] = " << Xe_arr[i] << std::endl;
 
     } else {
 
@@ -121,12 +117,6 @@ void RecombinationHistory::solve_number_density_electrons(){
         double a = exp(x_array[i+j]);
         double nb = OmegaB0 * rho_c0 / (m_H * pow(a, 3));
         ne_arr[i + j] = Xe_rest[j] * nb; // Ignore heavier elements than hydrogen, so nH = nb
-        std::cout << "--- Peebles ---" << std::endl;
-        std::cout << "x_array[i+j] = " << x_array[i+j] << std::endl;
-        std::cout << "x_rest[j] = " << x_rest[j] << std::endl;
-        std::cout << "Xe_rest[j] = " << Xe_rest[j] << std::endl;
-        std::cout << "Xe_arr[i+j] = " << Xe_arr[i+j] << std::endl;
-
 
         //// Also update saha arrays for each iteration
         auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i]);
@@ -193,13 +183,13 @@ std::pair<double,double> RecombinationHistory::electron_fraction_from_saha_equat
   
   double Xe = 0.0;
   double tol = 1e-4; // tolerance for taylor-approximation
-  if (coeff >= tol) {
+  if (4.0/coeff >= tol) {
     // Quadratic formula with a=1, b=coeff and c=-coeff. Ignore negative solutions
     Xe = (-coeff + sqrt(coeff*coeff + 4*coeff)) / 2.0;
   } else {
-    // Approximation for sqrt() if coeff << 1
-    Xe = (-coeff + 2 * sqrt(coeff) * (1 + coeff/8.0)) / 2.0;
+    Xe = 1.0;
   }
+
   double ne = Xe * nb; // Ignore heavier elements than hydrogen, so nH = nb
 
   // Return electron fraction and number density
@@ -233,26 +223,6 @@ int RecombinationHistory::rhs_peebles_ode(double x, const double *Xe, double *dX
   const double OmegaB0 = cosmo->get_OmegaB();
 
   double Tb = TCMB0 / a;
-  std::cout << "#################" << std::endl;
-  std::cout << "#################" << std::endl;
-  std::cout << "#################" << std::endl;
-  std::cout << "#################" << std::endl;
-  std::cout << "k_b = " << k_b << std::endl;
-  std::cout << "G = " << G << std::endl;
-  std::cout << "c = " << c << std::endl;
-  std::cout << "m_e = " << m_e << std::endl;
-  std::cout << "hbar = " << hbar << std::endl;
-  std::cout << "m_H = " << m_H << std::endl;
-  std::cout << "sigma_T = " << sigma_T << std::endl;
-  std::cout << "lambda_2s1s = " << lambda_2s1s << std::endl;
-  std::cout << "epsilon_0 = " << epsilon_0 << std::endl;
-  std::cout << "H0 = " << H0 << std::endl;
-  std::cout << "H = " << H << std::endl;
-  std::cout << "TCMB0 = " << TCMB0 << std::endl;
-  std::cout << "OmegaB0 = " << OmegaB0 << std::endl;
-  std::cout << "a = " << a << std::endl;
-  std::cout << "X_e = " << X_e << std::endl;
-  std::cout << "Tb = " << Tb << std::endl;
 
   //=============================================================================
   // TODO: Write the expression for dXedx
@@ -260,66 +230,28 @@ int RecombinationHistory::rhs_peebles_ode(double x, const double *Xe, double *dX
   double nH = 3.0 * H0*H0 * OmegaB0 / (8.0 * M_PI * G * m_H * pow(a, 3.0));
   // double nH = 3.0 * H0*H0 * OmegaB0 / 8.0 / M_PI / G / m_H / pow(a, 3.0);
   double n_1s = (1.0 - X_e) * nH;
-  std::cout << "8.0*M_PI*G*m_H*pow(a,3.0) = " << 8.0*M_PI*G*m_H*pow(a,3.0) << std::endl;
-  std::cout << "nH = " << nH << std::endl;
-  std::cout << "n_1s = " << n_1s << std::endl;
 
   double epsilon0_kb_Tb = epsilon_0 / (k_b * Tb);
-  
-  std::cout << "epsilon0_kb_Tb = " << epsilon0_kb_Tb << std::endl;
   double phi2 = 0.448 * log(epsilon0_kb_Tb);
-  
-  std::cout << "--- ALPHA2 --- " << std::endl;
-  std::cout << "8.0/sqrt(3.0*M_PI)*c*sigma_T = " << 8.0/sqrt(3.0*M_PI)*c*sigma_T << std::endl;
-  std::cout << "sqrt(epsilon0_kb_Tb) = " << sqrt(epsilon0_kb_Tb) << std::endl;
-  std::cout << "phi2 = " << phi2 << std::endl;
   double alpha2 = 8.0/sqrt(3.0*M_PI) * c * sigma_T * sqrt(epsilon0_kb_Tb) * phi2;
-  std::cout << "-------------- " << std::endl;
-  std::cout << "alpha2 = " << alpha2 << std::endl;
   
-  // std::cout << "alpha = " << alpha << std::endl;
-  std::cout << "phi2 = " << phi2 << std::endl;
-
-  // double beta_coeff = pow(k_b, 3/2) / pow(hbar, 3) * alpha2 * pow(m_e*Tb / (2
-  // * M_PI), 3/2);
-  std::cout << "--- BETA COEFF ---" << std::endl;
-  std::cout << "alpha2 = " << alpha2 << std::endl;
-  std::cout << "k_b*m_e*Tb = " << k_b*m_e*Tb << std::endl;
-  std::cout << "2.0*M_PI*hbar*hbar = " << 2.0*M_PI*hbar*hbar << std::endl;
-  std::cout << "k_b*m_e*Tb / (2.0*M_PI*hbar*hbar) = " << k_b*m_e*Tb / (2.0*M_PI*hbar*hbar) << std::endl;
-  std::cout << "------------------" << std::endl;
   double beta_coeff = alpha2 * pow(k_b*m_e*Tb / (2.0 * M_PI * hbar*hbar), 3.0/2.0);
   double beta = beta_coeff * exp(-epsilon0_kb_Tb);
   
   // Write beta2 explicity instead of in terms of beta to avoid overflow in exponent.
-  // double beta2 = beta_coeff * exp(-epsilon0_kb_Tb / 4.0);
-  double beta2 = beta * exp(3.0 / 4.0 * epsilon0_kb_Tb);
-  std::cout << "beta_coeff = " << beta_coeff << std::endl;
-  std::cout << "beta = " << beta << std::endl;
-  std::cout << "beta2 = " << beta2 << std::endl;
-
-  // double lambda_alpha = 1.0/pow(hbar*c, 3.0) * H * pow(3.0*epsilon_0, 3.0) / (pow(8.0*M_PI, 2.0) * n_1s);
+  double beta2 = beta_coeff * exp(-epsilon0_kb_Tb / 4.0);
+  
   double lambda_alpha = H * pow(3.0*epsilon_0, 3.0) / (pow(8.0*M_PI, 2.0) * pow(c, 3) * pow(hbar, 3) * n_1s);
-  // std::cout << "lambda_alpha_den = " << pow(8.0*M_PI, 2.0) * pow(c, 3) * pow(hbar, 3) * n_1s << std::endl;
-  // double lambda_alpha = H * pow(3.0*epsilon_0, 3.0) / pow(8.0*M_PI, 2.0) / pow(c, 3) / pow(hbar, 3) / n_1s;
   double lambda_2s1s_alpha = lambda_2s1s + lambda_alpha;
   double Cr = (lambda_2s1s_alpha) / (lambda_2s1s_alpha + beta2);
-  
-  std::cout << "lambda_alpha = " << lambda_alpha << std::endl;
-  std::cout << "lambda_2s1s_alpha = " << lambda_2s1s_alpha << std::endl;
-  std::cout << "Cr = " << Cr << std::endl;
   
   double fac = Cr/H;
   double first_term = beta*(1.0-X_e);
   double second_term = nH*alpha2*X_e*X_e;
-  std::cout << "fac = " << fac << std::endl;
-  std::cout << "first_term = " << first_term << std::endl;
-  std::cout << "second_term = " << second_term << std::endl;
   
   double rhs = Cr / H * (beta * (1.0 - X_e) - nH * alpha2 * X_e*X_e);
-  std::cout << "rhs = " << rhs << std::endl;
+  
   dXedx[0] = rhs;
-  // dXedx[0] = 0.0;
 
   return GSL_SUCCESS;
 }
@@ -334,7 +266,7 @@ void RecombinationHistory::solve_for_optical_depth_tau(){
 
   // Set up x-arrays to integrate over. We split into three regions as we need extra points in reionisation
   const int npts = 1000;
-  Vector x_array = Utils::linspace(x_start, x_end, npts);
+  Vector x_array_rev = Utils::linspace(x_end, x_start, npts); // Reversed to account for initial condition
 
   // The ODE system dtau/dx, dtau_noreion/dx and dtau_baryon/dx
   ODEFunction dtaudx = [&](double x, const double *tau, double *dtaudx){
@@ -359,21 +291,16 @@ void RecombinationHistory::solve_for_optical_depth_tau(){
   // TODO: Set up and solve the ODE and make tau splines
   //=============================================================================
 
-  Vector tau_ini{0}; // Use some initialized value, then subtract value at x=0 to get correct.
+  Vector tau_ini{0.0}; // Use some initialized value, then subtract value at x=0 to get correct.
   ODESolver tau_ode;
-  tau_ode.solve(dtaudx, x_array, tau_ini);
+  tau_ode.solve(dtaudx, x_array_rev, tau_ini);
 
-  auto tau_temp_array = tau_ode.get_data_by_component(0); // temporary tau array until subtracting tau(x=0)
-
-  // Find tau_temp(x=0), and subtract that value from tau_temp to ensure tau(x=0)=0
-  Spline tau_temp_spline(x_array, tau_temp_array);
-  double tau_zero = tau_temp_spline(0);
-  Vector tau_array(npts, 0.0); // Initialize tau array
-
+  auto tau_array_rev = tau_ode.get_data_by_component(0); // temporary tau array until reversing tau(x=0)
+  Vector tau_array(npts, 0.0);
   for (int i=0; i < npts; i++) {
-    // Subtract tau_zero from each element in tau_temp_array, and store in tau_array
-    tau_array[i] = tau_temp_array[i] - tau_zero;
+    tau_array[i] = tau_array_rev[npts-i];
   }
+  Vector x_array = Utils::linspace(x_start, x_end, npts);
 
   tau_of_x_spline.create(x_array, tau_array, "tau"); // Spline result
 
