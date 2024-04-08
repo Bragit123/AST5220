@@ -119,7 +119,7 @@ void RecombinationHistory::solve_number_density_electrons(){
         ne_arr[i + j] = Xe_rest[j] * nb; // Ignore heavier elements than hydrogen, so nH = nb
 
         //// Also update saha arrays for each iteration
-        auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i]);
+        auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i+j]);
         const double Xe_current = Xe_ne_data.first;
         const double ne_current = Xe_ne_data.second;
         Xe_saha_arr[i+j] = Xe_current;
@@ -142,11 +142,8 @@ void RecombinationHistory::solve_number_density_electrons(){
   log_Xe_of_x_spline.create(x_array, log_Xe_arr, "Xe");
   log_ne_of_x_spline.create(x_array, log_ne_arr, "ne");
   
-  Vector log_Xe_saha_arr = log(Xe_saha_arr);
-  Vector log_ne_saha_arr = log(ne_saha_arr);
-  
-  log_Xe_saha_of_x_spline.create(x_array, log_Xe_saha_arr, "Xe");
-  log_ne_saha_of_x_spline.create(x_array, log_ne_saha_arr, "ne");
+  Xe_saha_of_x_spline.create(x_array, Xe_saha_arr, "Xe_saha");
+  ne_saha_of_x_spline.create(x_array, ne_saha_arr, "ne_saha");
 
   Utils::EndTiming("Xe");
 }
@@ -183,7 +180,7 @@ std::pair<double,double> RecombinationHistory::electron_fraction_from_saha_equat
   
   double Xe = 0.0;
   double tol = 1e-4; // tolerance for taylor-approximation
-  if (4.0/coeff >= tol) {
+  if (1.0/coeff >= tol) {
     // Quadratic formula with a=1, b=coeff and c=-coeff. Ignore negative solutions
     Xe = (-coeff + sqrt(coeff*coeff + 4*coeff)) / 2.0;
   } else {
@@ -435,8 +432,7 @@ double RecombinationHistory::Xe_saha_of_x(double x) const{
   //=============================================================================
   // TODO: Implement
   //=============================================================================
-  double log_Xe_saha = log_Xe_saha_of_x_spline(x);
-  double Xe_saha = exp(log_Xe_saha);
+  double Xe_saha = Xe_saha_of_x_spline(x);
 
   return Xe_saha;
 }
@@ -446,8 +442,7 @@ double RecombinationHistory::ne_saha_of_x(double x) const{
   //=============================================================================
   // TODO: Implement
   //=============================================================================
-  double log_ne_saha = log_ne_saha_of_x_spline(x);
-  double ne_saha = exp(log_ne_saha);
+  double ne_saha = ne_saha_of_x_spline(x);
 
   return ne_saha;
 }
@@ -478,6 +473,7 @@ void RecombinationHistory::info() const{
   std::cout << "Yp:          " << Yp          << "\n";
   std::cout << "rs (Mpc):    " << rs / Mpc    << "\n";
   std::cout << "Xe(x=0)      " << Xe_of_x(0)  << "\n";
+  std::cout << "Xe_saha(x=0)      " << Xe_saha_of_x(0)  << "\n";
   std::cout << "Times at decoupling:\n";
   std::cout << "  x:         " << x_decoupling << "\n";
   std::cout << "  z:         " << z_decoupling << "\n";
