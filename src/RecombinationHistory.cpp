@@ -475,11 +475,11 @@ void RecombinationHistory::info() const{
   std::cout << "Xe(x=0)      " << Xe_of_x(0)  << "\n";
   std::cout << "Xe_saha(x=0)      " << Xe_saha_of_x(0)  << "\n";
   std::cout << "Times at decoupling:\n";
-  std::cout << "  x:         " << x_decoupling << "\n";
+  std::cout << "  a:         " << exp(x_decoupling) << "\n";
   std::cout << "  z:         " << z_decoupling << "\n";
   std::cout << "  t (Gyr):   " << t_decoupling / Gyr << "\n";
   std::cout << "Times at recombination:\n";
-  std::cout << "  x:         " << x_recombination << "\n";
+  std::cout << "  a:         " << exp(x_recombination) << "\n";
   std::cout << "  z:         " << z_recombination << "\n";
   std::cout << "  t (Gyr):   " << t_recombination / Gyr << "\n";
   std::cout << std::endl;
