@@ -19,8 +19,10 @@ class RecombinationHistory{
     double Yp;
  
     // The start and end points for recombination arrays (can be modified)
-    const double x_start  = log(1e-5);
-    const double x_end    = 0;
+    // const double x_start  = log(1e-5);
+    // const double x_end    = 0;
+    const double x_start  = Constants.x_start;
+    const double x_end    = Constants.x_end;
     
     // Numbers of points of Xe,ne array (modify as you see fit)
     const int npts_rec_arrays = 4000;
@@ -88,6 +90,7 @@ class RecombinationHistory{
     double Xe_saha_of_x(double x) const;
     double ne_saha_of_x(double x) const;
     double get_Yp() const;
+    double get_x_recomb() const;
 };
 
 #endif

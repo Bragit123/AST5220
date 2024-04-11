@@ -37,8 +37,10 @@ void Perturbations::integrate_perturbations(){
   // Start at k_min end at k_max with n_k points with either a
   // quadratic or a logarithmic spacing
   //===================================================================
-  Vector k_array(n_k);
-
+  double k_log_start = log(k_min);
+  double k_log_end = log(k_max);
+  Vector k_log_array = Utils::linspace(k_log_start, k_log_end, n_k);
+  Vector k_array = exp(k_log_array);
   // Loop over all wavenumbers
   for(int ik = 0; ik < n_k; ik++){
 
@@ -273,16 +275,42 @@ Vector Perturbations::set_ic_after_tight_coupling(
 //====================================================
 
 double Perturbations::get_tight_coupling_time(const double k) const{
-  double x_tight_coupling_end = 0.0;
 
   //=============================================================================
   // TODO: compute and return x for when tight coupling ends
   // Remember all the three conditions in Callin
   //=============================================================================
-  // ...
-  // ...
+  Vector x_array = Utils::linspace(x_start, x_end, n_x);
+  double x_recomb = rec->get_x_recomb();
 
-  return x_tight_coupling_end;
+  // Declare variables
+  double Hp = 0.0;
+  double dtau = 0.0;
+  bool cond1 = true;
+  bool cond2 = true;
+  bool cond3 = true;
+  double xi = 0.0;
+
+  for (int i=0; i < n_x; i++) {
+    xi = x_array[i];
+    Hp = cosmo->Hp_of_x(xi);
+    dtau = rec->dtaudx_of_x(xi);
+    
+    // Conditions for leaving tight coupling. (These are the reversed conditions
+    // from Callin, since he gives the conditions that must be met to STAY in
+    // the tight coupling regime, thus < or > are switched to >= and <= respectively.)
+    cond1 = abs(k/(Hp*dtau)) >= 0.1;
+    cond2 = abs(dtau) <= 10.0;
+    cond3 = xi >= x_recomb;
+
+    if ((cond1 || cond2) || cond3) {
+      // If any of the three conditions are met, leave tight coupling regime
+      return xi;
+    }
+  }
+
+  std::cout << "WARNING: Never left tight coupling!" << std::endl;
+  return x_end;
 }
 
 //====================================================

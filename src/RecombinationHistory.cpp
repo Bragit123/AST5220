@@ -451,6 +451,11 @@ double RecombinationHistory::get_Yp() const{
   return Yp;
 }
 
+double RecombinationHistory::get_x_recomb() const{
+  double x_recombination = Utils::binary_search_for_value(log_Xe_of_x_spline, log(0.1));
+  return x_recombination;
+}
+
 //====================================================
 // Print some useful info about the class
 //====================================================
@@ -461,7 +466,7 @@ void RecombinationHistory::info() const{
   double t_decoupling = cosmo->t_of_x(x_decoupling);
   double rs = s_of_x(x_decoupling);
 
-  double x_recombination = Utils::binary_search_for_value(log_Xe_of_x_spline, log(0.1));
+  double x_recombination = get_x_recomb();
   double z_recombination = cosmo->get_z(x_recombination);
   double t_recombination = cosmo->t_of_x(x_recombination);
 
