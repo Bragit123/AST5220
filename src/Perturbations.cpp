@@ -122,6 +122,8 @@ void Perturbations::integrate_perturbations(){
     //===================================================================
     //...
     //...
+    std::cout << "----- REMEMBER TO REMOVE BREAK TO ALLOW LOOP OVER k -----" << std::endl;
+    break; // REMOVE WHEN IT WORKS FOR ONE k TO ALLOW THE LOOP TO RUN
 
   }
   Utils::EndTiming("integrateperturbation");
@@ -168,22 +170,22 @@ Vector Perturbations::set_ic(const double x, const double k) const{
   //=============================================================================
   // TODO: Set the initial conditions in the tight coupling regime
   //=============================================================================
-  // ...
-  // ...
 
-  // SET: Scalar quantities (Gravitational potential, baryons and CDM)
-  // ...
-  // ...
+  double c = Constants.c;
+  double Hp = cosmo->Hp_of_x(x);
+  
+  // Neglect neutrinos -> f_nu = 0
+  double Psi = -2.0/3.0;
+  Phi = -Psi;
 
-  // SET: Photon temperature perturbations (Theta_ell)
-  // ...
-  // ...
+  delta_cdm = -(3.0/2.0) * Psi;
+  delta_b = -(3.0/2.0) * Psi;
 
-  // SET: Neutrino perturbations (N_ell)
-  if(neutrinos){
-    // ...
-    // ...
-  }
+  v_cdm = -c*k/(2*Hp) * Psi;
+  v_b = -c*k/(2*Hp) * Psi;
+
+  Theta[0] = -0.5 * Psi;
+  Theta[1] = c*k/(6.0*Hp) * Psi;
 
   return y_tc;
 }
@@ -282,6 +284,7 @@ double Perturbations::get_tight_coupling_time(const double k) const{
   //=============================================================================
   Vector x_array = Utils::linspace(x_start, x_end, n_x);
   double x_recomb = rec->get_x_recomb();
+  double c = Constants.c;
 
   // Declare variables
   double Hp = 0.0;
@@ -299,7 +302,7 @@ double Perturbations::get_tight_coupling_time(const double k) const{
     // Conditions for leaving tight coupling. (These are the reversed conditions
     // from Callin, since he gives the conditions that must be met to STAY in
     // the tight coupling regime, thus < or > are switched to >= and <= respectively.)
-    cond1 = abs(k/(Hp*dtau)) >= 0.1;
+    cond1 = abs(c*k/(Hp*dtau)) >= 0.1;
     cond2 = abs(dtau) <= 10.0;
     cond3 = xi >= x_recomb;
 
@@ -410,22 +413,53 @@ int Perturbations::rhs_tight_coupling_ode(double x, double k, const double *y, d
   //=============================================================================
   // TODO: fill in the expressions for all the derivatives
   //=============================================================================
+  double a = exp(x);
+  double c = Constants.c;
 
-  // SET: Scalar quantities (Phi, delta, v, ...)
-  // ...
-  // ...
-  // ...
+  // Values from BackgroundCosmology and Recombination
+  double H0 = cosmo->get_H0();
+  double OmegaR0 = cosmo->get_OmegaR();
+  double OmegaB0 = cosmo->get_OmegaB();
+  double OmegaCDM0 = cosmo->get_OmegaCDM();
 
-  // SET: Photon multipoles (Theta_ell)
-  // ...
-  // ...
+  double Hp = cosmo->Hp_of_x(x);
+  double dHpdx = cosmo->dHpdx_of_x(x);
+  double dtaudx = rec->dtaudx_of_x(x);
+  double ddtauddx = rec->ddtauddx_of_x(x);
 
-  // SET: Neutrino mutlipoles (Nu_ell)
-  if(neutrinos){
-    // ...
-    // ...
-    // ...
-  }
+  double ck_Hp = c*k/Hp; // Appears often, so this is just to simplify computations
+
+  double R = 4.0 * OmegaR0 / (3.0 * OmegaB0 * a);
+  double Theta2 = -20.0 * ck_Hp / (45.0 * dtaudx) * Theta[1];
+  double Psi = -Phi - 12.0*H0*H0 / (c*c * k*k * a*a) * OmegaR0 * Theta2; // Ignore neutrinos
+
+  // q
+  double q_term1 = -((1.0-R) * dtaudx + (1.0+R) * ddtauddx) * (3.0*Theta[1] + v_b);
+  double q_term2 = -ck_Hp * Psi;
+  double q_term3 = (1.0 - dHpdx/Hp) * ck_Hp * (-Theta[0] + 2.0*Theta2);
+  double q_term4 = ck_Hp * dThetadx[0];
+  double q_numerator = q_term1 + q_term2 + q_term3 + q_term4;
+  double q_denominator = (1.0 + R) * dtaudx + dHpdx/Hp - 1.0;
+  double q = q_numerator / q_denominator;
+
+  // delta_CDM, v_cdm, delta_b
+  ddelta_cdmdx = ck_Hp * v_cdm - 3*dPhidx;
+  ddelta_bdx = ck_Hp * v_b - 3*dPhidx;
+  dv_cdmdx = -v_cdm - ck_Hp * Psi;
+
+  // dv_bdx
+  double dv_bdx_term1 = -v_b - ck_Hp * Psi;
+  double dv_bdx_term2 = R * (q + ck_Hp * (-Theta[0] + 2*Theta2) - ck_Hp * Psi);
+  dv_bdx = 1.0 / (1.0 + R) * (dv_bdx_term1 + dv_bdx_term2);
+
+  // dPhidx
+  double dPhidx_term1 = Psi - c*c * k*k / (3.0*Hp*Hp) * Phi;
+  double dPhidx_term2_1 = OmegaCDM0 / a * delta_cdm + OmegaB0 / a * delta_b;
+  double dPhidx_term2_2 = 4.0*OmegaR0 /(a*a) * Theta[0];
+  dPhidx = dPhidx_term1 + H0*H0/(2.0*Hp*Hp) * (dPhidx_term2_1 + dPhidx_term2_2);
+
+  // Theta1
+  dThetadx[1] = 1.0/3.0 * (q - dv_bdx);
 
   return GSL_SUCCESS;
 }
