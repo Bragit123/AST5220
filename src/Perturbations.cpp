@@ -20,8 +20,9 @@ void Perturbations::solve(){
   // Integrate all the perturbation equation and spline the result
   integrate_perturbations();
 
-  // Compute source functions and spline the result
-  compute_source_functions();
+  // // Compute source functions and spline the result
+  std::cout << "#### HUSK UNCOMMENT SOURCE FUNCTION ####" << std::endl;
+  // compute_source_functions();
 }
 
 //====================================================
@@ -37,6 +38,21 @@ void Perturbations::integrate_perturbations(){
   // Start at k_min end at k_max with n_k points with either a
   // quadratic or a logarithmic spacing
   //===================================================================
+
+  // Initialize vectors needed for splines
+  Vector2D delta_cdm(n_x, Vector(n_k));
+  Vector2D delta_b(n_x, Vector(n_k));
+  Vector2D v_cdm(n_x, Vector(n_k));
+  Vector2D v_b(n_x, Vector(n_k));
+  Vector2D Phi(n_x, Vector(n_k));
+  Vector2D Pi(n_x, Vector(n_k));
+  Vector2D Psi(n_x, Vector(n_k));
+  std::vector<Vector2D> Theta(Constants.n_ell_theta, Vector2D(n_x, Vector(n_k)));
+
+  // Find x_array
+  Vector x_array = Utils::linspace(x_start, x_end, n_x);
+
+  // Make k_array
   double k_log_start = log(k_min);
   double k_log_end = log(k_max);
   Vector k_log_array = Utils::linspace(k_log_start, k_log_end, n_k);
@@ -55,9 +71,20 @@ void Perturbations::integrate_perturbations(){
 
     // Find value to integrate to
     double x_end_tight = get_tight_coupling_time(k);
+
+    // Find number of x-values for tight coupling and the full system
     double tight_fraction = (x_end_tight - x_start) / (x_end - x_start);
-    double n_x_tc = ceil(tight_fraction * n_x);
+    double n_x_tc = floor(tight_fraction * n_x);
     double n_x_full = n_x - n_x_tc;
+
+    Vector x_array_tc(n_x_tc);
+    Vector x_array_full(n_x_full);
+    for (int i=0; i < n_x_tc; i++) {
+      x_array_tc[i] = x_array[i];
+    }
+    for (int i=0; i < n_x_full; i++) {
+      x_array_full[i] = x_array[n_x_tc + i];
+    }
 
     //===================================================================
     // TODO: Tight coupling integration
@@ -75,7 +102,6 @@ void Perturbations::integrate_perturbations(){
     };
 
     // Integrate from x_start -> x_end_tight
-    Vector x_array_tc = Utils::linspace(x_start, x_end_tight, n_x_tc);
     ODESolver ode_tc;
     ode_tc.solve(dydx_tight_coupling, x_array_tc, y_tight_coupling_ini);
 
@@ -95,6 +121,7 @@ void Perturbations::integrate_perturbations(){
     for (int i=0; i < n_ell_tot_tc; i++) {
       y_end_of_tc[i] = y_tight_coupling[n_ell_tot_tc-1][i];
     }
+
     auto y_full_ini = set_ic_after_tight_coupling(y_end_of_tc, x_end_tight, k);
 
     // The full ODE system
@@ -102,27 +129,10 @@ void Perturbations::integrate_perturbations(){
       return rhs_full_ode(x, k, y, dydx);
     };
 
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
-    ////////////////////// FORTSETT HER!!!!!!!! /////////////////////////////
+    ODESolver ode_full;
+    ode_full.solve(dydx_full, x_array_full, y_full_ini);
 
-    // Integrate from x_end_tight -> x_end
-    // ...
-    // ...
-    // ...
-    // ...
-    // ...
+    auto y_full = ode_full.get_data();
 
     //===================================================================
     // TODO: remember to store the data found from integrating so we can
@@ -144,10 +154,51 @@ void Perturbations::integrate_perturbations(){
     // Theta_spline = std::vector<Spline2D>(n_ell_theta);
     //
     //===================================================================
-    //...
-    //...
-    std::cout << "----- REMEMBER TO REMOVE BREAK TO ALLOW LOOP OVER k -----" << std::endl;
-    break; // REMOVE WHEN IT WORKS FOR ONE k TO ALLOW THE LOOP TO RUN
+    
+    // Some values needed to compute Psi
+    double H0 = cosmo->get_H0();
+    double OmegaR0 = cosmo->get_OmegaR();
+    double c = Constants.c;
+
+    for (int ix = 0; ix < n_x_tc; ix++) {
+      delta_cdm[ix][ik] = y_tight_coupling[ix][Constants.ind_deltacdm];
+      delta_b[ix][ik] = y_tight_coupling[ix][Constants.ind_deltab];
+      v_cdm[ix][ik] = y_tight_coupling[ix][Constants.ind_vcdm];
+      v_b[ix][ik] = y_tight_coupling[ix][Constants.ind_vb];
+      Phi[ix][ik] = y_tight_coupling[ix][Constants.ind_Phi];
+
+      for (int l=0; l < Constants.n_ell_theta_tc; l++) {
+        Theta[l][ix][ik] = y_tight_coupling[ix][Constants.ind_start_theta + l];
+      }
+
+      double Hp = cosmo->Hp_of_x(x_array[ix]);
+      double dtaudx = rec->dtaudx_of_x(x_array[ix]);
+      for (int l=Constants.n_ell_theta_tc; l < Constants.n_ell_theta; l++) {
+        Theta[l][ix][ik] = -l / (2.0*l + 1.0) * c*k / (Hp*dtaudx) * Theta[l-1][ix][ik];
+      }
+
+      double a = exp(x_array[ix]);
+      Psi[ix][ik] = -Phi[ix][ik] - 12*H0*H0 / (c*c * k*k * a*a) * OmegaR0 * Theta[2][ix][ik];
+    }
+    
+    for (int ix_full = 0; ix_full < n_x_full; ix_full++) {
+      double ix = n_x_tc + ix_full;
+      delta_cdm[ix][ik] = y_full[ix_full][Constants.ind_deltacdm];
+      delta_b[ix][ik] = y_full[ix_full][Constants.ind_deltab];
+      v_cdm[ix][ik] = y_full[ix_full][Constants.ind_vcdm];
+      v_b[ix][ik] = y_full[ix_full][Constants.ind_vb];
+      Phi[ix][ik] = y_full[ix_full][Constants.ind_Phi];
+
+      for (int l=0; l < Constants.n_ell_theta; l++) {
+        Theta[l][ix][ik] = y_full[ix_full][Constants.ind_start_theta + l];
+      }
+
+      double a = exp(x_array[ix]);
+      Psi[ix][ik] = -Phi[ix][ik] - 12*H0*H0 / (c*c * k*k * a*a) * OmegaR0 * Theta[2][ix][ik];
+    }
+
+    // std::cout << "----- REMEMBER TO REMOVE BREAK TO ALLOW LOOP OVER k -----" << std::endl;
+    // break; // REMOVE WHEN IT WORKS FOR ONE k TO ALLOW THE LOOP TO RUN
 
   }
   Utils::EndTiming("integrateperturbation");
@@ -155,9 +206,18 @@ void Perturbations::integrate_perturbations(){
   //=============================================================================
   // TODO: Make all splines needed: Theta0,Theta1,Theta2,Phi,Psi,...
   //=============================================================================
-  // ...
-  // ...
-  // ...
+  delta_cdm_spline.create(x_array, k_array, delta_cdm, "delta_cdm_spline");
+  delta_b_spline.create(x_array, k_array, delta_b, "delta_b_spline");
+  v_cdm_spline.create(x_array, k_array, v_cdm, "v_cdm_spline");
+  v_b_spline.create(x_array, k_array, v_b, "v_b_spline");
+  Phi_spline.create(x_array, k_array, Phi, "Phi_spline");
+  Psi_spline.create(x_array, k_array, Psi, "Psi_spline");
+
+  Theta_spline = std::vector<Spline2D>(Constants.n_ell_theta);
+  for (int l=0; l < Constants.n_ell_theta; l++) {
+    Vector2D Theta_l = Theta[l];
+    Theta_spline[l].create(x_array, k_array, Theta_l);
+  }
 }
 
 //====================================================
@@ -701,11 +761,11 @@ void Perturbations::output(const double k, const std::string filename) const{
     fp << get_Theta(x,k,2)   << " ";
     fp << get_Phi(x,k)       << " ";
     fp << get_Psi(x,k)       << " ";
-    fp << get_Pi(x,k)        << " ";
-    fp << get_Source_T(x,k)  << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << " ";
+    // fp << get_Pi(x,k)        << " ";
+    // fp << get_Source_T(x,k)  << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << " ";
     fp << "\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
