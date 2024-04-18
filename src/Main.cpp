@@ -17,7 +17,7 @@ int main(int argc, char **argv){
   double OmegaB      = 0.05;
   double OmegaCDM    = 0.267;
   double OmegaK      = 0.0;
-  double Neff        = 3.046;
+  double Neff        = 3.046 * 0.0;
   double TCMB        = 2.7255;
 
   // Recombination parameters
@@ -70,7 +70,6 @@ int main(int argc, char **argv){
   
   // Output perturbation quantities
   double kvalue = 0.01 / Constants.Mpc;
-  std::cout << "kvalue = " << kvalue << std::endl;
   pert.output(kvalue, "perturbations_k0.01.txt");
   
   // Remove when module is completed

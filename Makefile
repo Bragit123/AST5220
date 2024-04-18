@@ -29,7 +29,9 @@ OPTIONS += -D_SPLINE_WARNINGS_ON
 
 #=======================================================
 
-C = -O3 -g $(OPTIONS)
+C = -O3 -g $(OPTIONS) -fsanitize=address
+# -fsanitize=address sjekker om du prøver å hente elementer utenfor rangen til
+# en vektor
 
 #=======================================================
 

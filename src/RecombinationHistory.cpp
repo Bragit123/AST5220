@@ -295,7 +295,7 @@ void RecombinationHistory::solve_for_optical_depth_tau(){
   auto tau_array_rev = tau_ode.get_data_by_component(0); // temporary tau array until reversing tau(x=0)
   Vector tau_array(npts, 0.0);
   for (int i=0; i < npts; i++) {
-    tau_array[i] = tau_array_rev[npts-i];
+    tau_array[i] = tau_array_rev[npts-1-i];
   }
   Vector x_array = Utils::linspace(x_start, x_end, npts);
 

@@ -45,7 +45,6 @@ void Perturbations::integrate_perturbations(){
   Vector2D v_cdm(n_x, Vector(n_k));
   Vector2D v_b(n_x, Vector(n_k));
   Vector2D Phi(n_x, Vector(n_k));
-  Vector2D Pi(n_x, Vector(n_k));
   Vector2D Psi(n_x, Vector(n_k));
   std::vector<Vector2D> Theta(Constants.n_ell_theta, Vector2D(n_x, Vector(n_k)));
 
@@ -57,6 +56,7 @@ void Perturbations::integrate_perturbations(){
   double k_log_end = log(k_max);
   Vector k_log_array = Utils::linspace(k_log_start, k_log_end, n_k);
   Vector k_array = exp(k_log_array);
+
   // Loop over all wavenumbers
   for(int ik = 0; ik < n_k; ik++){
 
@@ -75,7 +75,7 @@ void Perturbations::integrate_perturbations(){
     // Find number of x-values for tight coupling and the full system
     double tight_fraction = (x_end_tight - x_start) / (x_end - x_start);
     double n_x_tc = floor(tight_fraction * n_x);
-    double n_x_full = n_x - n_x_tc;
+    double n_x_full = n_x - n_x_tc + 1;
 
     Vector x_array_tc(n_x_tc);
     Vector x_array_full(n_x_full);
@@ -83,7 +83,7 @@ void Perturbations::integrate_perturbations(){
       x_array_tc[i] = x_array[i];
     }
     for (int i=0; i < n_x_full; i++) {
-      x_array_full[i] = x_array[n_x_tc + i];
+      x_array_full[i] = x_array[n_x_tc + i - 1];
     }
 
     //===================================================================
@@ -107,7 +107,7 @@ void Perturbations::integrate_perturbations(){
 
     auto y_tight_coupling = ode_tc.get_data();
 
-    //====i===============================================================
+    //===================================================================
     // TODO: Full equation integration
     // Remember to implement the routines:
     // set_ic_after_tight_coupling : The IC after tight coupling ends
@@ -117,12 +117,16 @@ void Perturbations::integrate_perturbations(){
     // Set up initial conditions (y_tight_coupling is the solution at the end of
     // tight coupling)
     const int n_ell_tot_tc = Constants.n_ell_tot_tc;
-    Vector y_end_of_tc(n_ell_tot_tc);
-    for (int i=0; i < n_ell_tot_tc; i++) {
-      y_end_of_tc[i] = y_tight_coupling[n_ell_tot_tc-1][i];
-    }
+    // Vector y_end_of_tc(n_ell_tot_tc);
+    // for (int i=0; i < n_ell_tot_tc; i++) {
+    //   y_end_of_tc[i] = y_tight_coupling.back()[i];
+    // }
 
-    auto y_full_ini = set_ic_after_tight_coupling(y_end_of_tc, x_end_tight, k);
+    auto y_full_ini = set_ic_after_tight_coupling(y_tight_coupling.back(), x_end_tight, k);
+
+    if (k*Constants.Mpc > 0.0093 && k*Constants.Mpc < 0.017) {
+      std::cout << "k = " << k*Constants.Mpc << "  :  " << y_full_ini[Constants.ind_start_theta] << std::endl;
+    }
 
     // The full ODE system
     ODEFunction dydx_full = [&](double x, const double *y, double *dydx){
@@ -182,7 +186,7 @@ void Perturbations::integrate_perturbations(){
     }
     
     for (int ix_full = 0; ix_full < n_x_full; ix_full++) {
-      double ix = n_x_tc + ix_full;
+      double ix = n_x_tc - 1 + ix_full;
       delta_cdm[ix][ik] = y_full[ix_full][Constants.ind_deltacdm];
       delta_b[ix][ik] = y_full[ix_full][Constants.ind_deltab];
       v_cdm[ix][ik] = y_full[ix_full][Constants.ind_vcdm];
@@ -257,6 +261,7 @@ Vector Perturbations::set_ic(const double x, const double k) const{
 
   double c = Constants.c;
   double Hp = cosmo->Hp_of_x(x);
+  double ck_Hp = c*k/Hp;
   
   // Neglect neutrinos -> f_nu = 0
   double Psi = -2.0/3.0;
@@ -265,11 +270,11 @@ Vector Perturbations::set_ic(const double x, const double k) const{
   delta_cdm = -(3.0/2.0) * Psi;
   delta_b = -(3.0/2.0) * Psi;
 
-  v_cdm = -c*k/(2*Hp) * Psi;
-  v_b = -c*k/(2*Hp) * Psi;
+  v_cdm = -0.5 * ck_Hp * Psi;
+  v_b = -0.5 * ck_Hp * Psi;
 
   Theta[0] = -0.5 * Psi;
-  Theta[1] = c*k/(6.0*Hp) * Psi;
+  Theta[1] = 1.0/6.0 * ck_Hp * Psi;
 
   return y_tc;
 }
@@ -342,6 +347,7 @@ Vector Perturbations::set_ic_after_tight_coupling(
   double Hp = cosmo->Hp_of_x(x);
   double dtaudx = rec->dtaudx_of_x(x);
   double ck_Hpdtau = c*k / (Hp * dtaudx);
+
   Theta[2] = -20.0/45.0 * ck_Hpdtau * Theta[1];
 
   for (int l=3; l < n_ell_theta; l++) {
@@ -512,30 +518,33 @@ int Perturbations::rhs_tight_coupling_ode(double x, double k, const double *y, d
   double Theta2 = -20.0 * ck_Hp / (45.0 * dtaudx) * Theta[1];
   double Psi = -Phi - 12.0*H0*H0 / (c*c * k*k * a*a) * OmegaR0 * Theta2; // Ignore neutrinos
 
-  // q
-  double q_term1 = -((1.0-R) * dtaudx + (1.0+R) * ddtauddx) * (3.0*Theta[1] + v_b);
-  double q_term2 = -ck_Hp * Psi;
-  double q_term3 = (1.0 - dHpdx/Hp) * ck_Hp * (-Theta[0] + 2.0*Theta2);
-  double q_term4 = ck_Hp * dThetadx[0];
-  double q_numerator = q_term1 + q_term2 + q_term3 + q_term4;
-  double q_denominator = (1.0 + R) * dtaudx + dHpdx/Hp - 1.0;
-  double q = q_numerator / q_denominator;
-
-  // delta_CDM, v_cdm, delta_b
-  ddelta_cdmdx = ck_Hp * v_cdm - 3*dPhidx;
-  ddelta_bdx = ck_Hp * v_b - 3*dPhidx;
-  dv_cdmdx = -v_cdm - ck_Hp * Psi;
-
-  // dv_bdx
-  double dv_bdx_term1 = -v_b - ck_Hp * Psi;
-  double dv_bdx_term2 = R * (q + ck_Hp * (-Theta[0] + 2*Theta2) - ck_Hp * Psi);
-  dv_bdx = 1.0 / (1.0 + R) * (dv_bdx_term1 + dv_bdx_term2);
-
   // dPhidx
   double dPhidx_term1 = Psi - c*c * k*k / (3.0*Hp*Hp) * Phi;
   double dPhidx_term2_1 = OmegaCDM0 / a * delta_cdm + OmegaB0 / a * delta_b;
   double dPhidx_term2_2 = 4.0*OmegaR0 /(a*a) * Theta[0];
   dPhidx = dPhidx_term1 + H0*H0/(2.0*Hp*Hp) * (dPhidx_term2_1 + dPhidx_term2_2);
+
+  // dThetadx0
+  dThetadx[0] = -ck_Hp * Theta[1] - dPhidx;
+
+  // q
+  double q_term1 = -((1.0-R) * dtaudx + (1.0+R) * ddtauddx) * (3.0*Theta[1] + v_b);
+  double q_term2 = -ck_Hp * Psi;
+  double q_term3 = (1.0 - dHpdx/Hp) * ck_Hp * (-Theta[0] + 2.0*Theta2);
+  double q_term4 = -ck_Hp * dThetadx[0];
+  double q_numerator = q_term1 + q_term2 + q_term3 + q_term4;
+  double q_denominator = (1.0 + R) * dtaudx + dHpdx/Hp - 1.0;
+  double q = q_numerator / q_denominator;
+
+  // delta_CDM, v_cdm, delta_b
+  ddelta_cdmdx = ck_Hp * v_cdm - 3.0*dPhidx;
+  ddelta_bdx = ck_Hp * v_b - 3.0*dPhidx;
+  dv_cdmdx = -v_cdm - ck_Hp * Psi;
+
+  // dv_bdx
+  double dv_bdx_term1 = -v_b - ck_Hp * Psi;
+  double dv_bdx_term2 = R * (q + ck_Hp * (-Theta[0] + 2.0*Theta2) - ck_Hp * Psi);
+  dv_bdx = 1.0 / (1.0 + R) * (dv_bdx_term1 + dv_bdx_term2);
 
   // Theta1
   dThetadx[1] = 1.0/3.0 * (q - dv_bdx);
@@ -605,19 +614,19 @@ int Perturbations::rhs_full_ode(double x, double k, const double *y, double *dyd
   //=============================================================================
 
   // Psi
-  double Psi = -Phi - 12*H0*H0/(c*c * k*k * a*a) * OmegaR0 * Theta[2];
+  double Psi = -Phi - 12.0*H0*H0/(c*c * k*k * a*a) * OmegaR0 * Theta[2]; // Ignore neutrinos
 
   // Phi
   double Phi_term1 = Psi - 1.0/3.0 * ck_Hp * ck_Hp * Phi;
   double Phi_term2_1 = OmegaCDM0 / a * delta_cdm + OmegaB0 / a * delta_b;
   double Phi_term2_2 = 4.0 * OmegaR0 / (a*a) * Theta[0];
-  dPhidx = Phi_term1 + H0*H0/(2*Hp*Hp) * (Phi_term2_1 + Phi_term2_2);
+  dPhidx = Phi_term1 + H0*H0/(2.0*Hp*Hp) * (Phi_term2_1 + Phi_term2_2);
 
   // delta_cdm
-  ddelta_cdmdx = ck_Hp * v_cdm - 3*dPhidx;
+  ddelta_cdmdx = ck_Hp * v_cdm - 3.0*dPhidx;
   dv_cdmdx = -v_cdm - ck_Hp * Psi;
-  ddelta_bdx = ck_Hp * v_b - 3*dPhidx;
-  dv_bdx = -v_b - ck_Hp * Psi + dtaudx * R * (3*Theta[1] + v_b);
+  ddelta_bdx = ck_Hp * v_b - 3.0*dPhidx;
+  dv_bdx = -v_b - ck_Hp * Psi + dtaudx * R * (3.0*Theta[1] + v_b);
 
   // SET: Photon multipoles (Theta_ell)
   dThetadx[0] = -ck_Hp * Theta[1] - dPhidx;
@@ -626,8 +635,8 @@ int Perturbations::rhs_full_ode(double x, double k, const double *y, double *dyd
   double Theta1_term2 = ck_Hp / 3.0 * Psi + dtaudx * (Theta[1] + v_b / 3.0);
   dThetadx[1] = Theta1_term1 + Theta1_term2;
 
-  double Theta2_term1 = 2.0/(2.0*2.0 + 1) * ck_Hp * Theta[1];
-  double Theta2_term2 = -(2.0 + 1.0)/(2.0*2.0 + 1) * ck_Hp * Theta[3];
+  double Theta2_term1 = 2.0/(2.0*2.0 + 1.0) * ck_Hp * Theta[1];
+  double Theta2_term2 = -(2.0 + 1.0)/(2.0*2.0 + 1.0) * ck_Hp * Theta[3];
   double Theta2_term3 = dtaudx * (Theta[2] - 0.1 * Theta[2]);
   dThetadx[2] = Theta2_term1 + Theta2_term2 + Theta2_term3;
 
@@ -756,6 +765,10 @@ void Perturbations::output(const double k, const std::string filename) const{
   auto print_data = [&] (const double x) {
     double arg = k * (cosmo->eta_of_x(0.0) - cosmo->eta_of_x(x));
     fp << x                  << " ";
+    fp << get_delta_cdm(x,k) << " ";
+    fp << get_delta_b(x,k)   << " ";
+    fp << get_v_cdm(x,k)     << " ";
+    fp << get_v_b(x,k)       << " ";
     fp << get_Theta(x,k,0)   << " ";
     fp << get_Theta(x,k,1)   << " ";
     fp << get_Theta(x,k,2)   << " ";
@@ -770,4 +783,3 @@ void Perturbations::output(const double k, const std::string filename) const{
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
 }
-
