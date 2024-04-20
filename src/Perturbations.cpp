@@ -117,11 +117,6 @@ void Perturbations::integrate_perturbations(){
     // Set up initial conditions (y_tight_coupling is the solution at the end of
     // tight coupling)
     const int n_ell_tot_tc = Constants.n_ell_tot_tc;
-    // Vector y_end_of_tc(n_ell_tot_tc);
-    // for (int i=0; i < n_ell_tot_tc; i++) {
-    //   y_end_of_tc[i] = y_tight_coupling.back()[i];
-    // }
-
     auto y_full_ini = set_ic_after_tight_coupling(y_tight_coupling.back(), x_end_tight, k);
 
     if (k*Constants.Mpc > 0.0093 && k*Constants.Mpc < 0.017) {
@@ -198,12 +193,8 @@ void Perturbations::integrate_perturbations(){
       }
 
       double a = exp(x_array[ix]);
-      Psi[ix][ik] = -Phi[ix][ik] - 12*H0*H0 / (c*c * k*k * a*a) * OmegaR0 * Theta[2][ix][ik];
+      Psi[ix][ik] = -Phi[ix][ik] - 12.0*H0*H0 / (c*c * k*k * a*a) * OmegaR0 * Theta[2][ix][ik];
     }
-
-    // std::cout << "----- REMEMBER TO REMOVE BREAK TO ALLOW LOOP OVER k -----" << std::endl;
-    // break; // REMOVE WHEN IT WORKS FOR ONE k TO ALLOW THE LOOP TO RUN
-
   }
   Utils::EndTiming("integrateperturbation");
 
@@ -411,10 +402,15 @@ void Perturbations::compute_source_functions(){
   //=============================================================================
   // TODO: Make the x and k arrays to evaluate over and use to make the splines
   //=============================================================================
-  // ...
-  // ...
-  Vector k_array;
-  Vector x_array;
+
+  // Find x_array
+  Vector x_array = Utils::linspace(x_start, x_end, n_x);
+
+  // Make k_array
+  double k_log_start = log(k_min);
+  double k_log_end = log(k_max);
+  Vector k_log_array = Utils::linspace(k_log_start, k_log_end, n_k);
+  Vector k_array = exp(k_log_array);
 
   // Make storage for the source functions (in 1D array to be able to pass it to the spline)
   Vector ST_array(k_array.size() * x_array.size());
@@ -433,11 +429,32 @@ void Perturbations::compute_source_functions(){
       //=============================================================================
       // TODO: Compute the source functions
       //=============================================================================
-      // Fetch all the things we need...
-      // const double Hp       = cosmo->Hp_of_x(x);
-      // const double tau      = rec->tau_of_x(x);
-      // ...
-      // ...
+      
+      // From BackgroundCosmology
+      const double Hp = cosmo->Hp_of_x(x);
+      const double dHpdx = cosmo->dHpdx_of_x(x);
+
+      // From Recombination
+      const double tau = rec->tau_of_x(x);
+      const double g_tilde = rec->g_tile_of_x(x);
+
+      // From Perturbations
+      const double Theta0 = get_Theta(x, k, 0);
+      const double Psi = get_Psi(x, k);
+      const double dPsidx = get_dPsidx(x, k);
+      const double dPhidx = get_dPhidx(x, k);
+      const double Pi = get_Theta(x, k, 2); // Ignore polarization terms
+      const double dPidx = get_dThetadx(x, k, 2); // Ignore polarization terms
+      const double dv_bdx = get_dv_bdx(x, k);
+
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
+      /////////////// FORTSETT HER!!!!!!!! ////////////
 
       // Temperatur source
       ST_array[index] = 0.0;
@@ -673,11 +690,20 @@ double Perturbations::get_v_cdm(const double x, const double k) const{
 double Perturbations::get_v_b(const double x, const double k) const{
   return v_b_spline(x,k);
 }
+double Perturbations::get_dv_bdx(const double x, const double k) const{
+  return v_b_spline.deriv_x(x,k);
+}
 double Perturbations::get_Phi(const double x, const double k) const{
   return Phi_spline(x,k);
 }
+double Perturbations::get_dPhidx(const double x, const double k) const{
+  return Phi_spline.deriv_x(x,k);
+}
 double Perturbations::get_Psi(const double x, const double k) const{
   return Psi_spline(x,k);
+}
+double Perturbations::get_dPsidx(const double x, const double k) const{
+  return Psi_spline.deriv_x(x,y k);
 }
 double Perturbations::get_Pi(const double x, const double k) const{
   return Pi_spline(x,k);
@@ -690,6 +716,9 @@ double Perturbations::get_Source_E(const double x, const double k) const{
 }
 double Perturbations::get_Theta(const double x, const double k, const int ell) const{
   return Theta_spline[ell](x,k);
+}
+double Perturbations::get_dThetadx(const double x, const double k, const int ell) const{
+  return Theta_spline[ell].deriv_x(x,k);
 }
 double Perturbations::get_Theta_p(const double x, const double k, const int ell) const{
   return Theta_p_spline[ell](x,k);
