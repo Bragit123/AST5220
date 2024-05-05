@@ -119,10 +119,6 @@ void Perturbations::integrate_perturbations(){
     const int n_ell_tot_tc = Constants.n_ell_tot_tc;
     auto y_full_ini = set_ic_after_tight_coupling(y_tight_coupling.back(), x_end_tight, k);
 
-    if (k*Constants.Mpc > 0.0093 && k*Constants.Mpc < 0.017) {
-      std::cout << "k = " << k*Constants.Mpc << "  :  " << y_full_ini[Constants.ind_start_theta] << std::endl;
-    }
-
     // The full ODE system
     ODEFunction dydx_full = [&](double x, const double *y, double *dydx){
       return rhs_full_ode(x, k, y, dydx);
@@ -436,7 +432,7 @@ void Perturbations::compute_source_functions(){
 
       // From Recombination
       const double tau = rec->tau_of_x(x);
-      const double g_tilde = rec->g_tile_of_x(x);
+      const double g_tilde = rec->g_tilde_of_x(x);
 
       // From Perturbations
       const double Theta0 = get_Theta(x, k, 0);
@@ -703,7 +699,7 @@ double Perturbations::get_Psi(const double x, const double k) const{
   return Psi_spline(x,k);
 }
 double Perturbations::get_dPsidx(const double x, const double k) const{
-  return Psi_spline.deriv_x(x,y k);
+  return Psi_spline.deriv_x(x,k);
 }
 double Perturbations::get_Pi(const double x, const double k) const{
   return Pi_spline(x,k);

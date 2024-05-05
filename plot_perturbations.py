@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 ## Load each datafile
-n_k = 4
+n_k = 3
 
 k0_1 = pd.read_csv("perturbations_k0.1.txt", sep=" ", header=None)
 k0_1.columns = [
@@ -51,24 +51,25 @@ k0_001.columns = [
     "siu"
 ]
 
-k0_0001 = pd.read_csv("perturbations_k0.0001.txt", sep=" ", header=None)
-k0_0001.columns = [
-    "x",
-    "delta_cdm",
-    "delta_b",
-    "v_cdm",
-    "v_b",
-    "Theta0",
-    "Theta1",
-    "Theta2",
-    "Phi",
-    "Psi",
-    "siu"
-]
+# k0_0001 = pd.read_csv("perturbations_k0.0001.txt", sep=" ", header=None)
+# k0_0001.columns = [
+#     "x",
+#     "delta_cdm",
+#     "delta_b",
+#     "v_cdm",
+#     "v_b",
+#     "Theta0",
+#     "Theta1",
+#     "Theta2",
+#     "Phi",
+#     "Psi",
+#     "siu"
+# ]
 
-# df_list = [k0_1, k0_01, k0_001, k0_0001]
-k_values = [0.0001, 0.001, 0.01, 0.1]
-df_list = [k0_0001, k0_001, k0_01, k0_1]
+# k_values = [0.0001, 0.001, 0.01, 0.1]
+# df_list = [k0_0001, k0_001, k0_01, k0_1]
+k_values = [0.001, 0.01, 0.1]
+df_list = [k0_001, k0_01, k0_1]
 a_list = []
 delta_gamma_list = []
 v_gamma_list = []
@@ -137,7 +138,10 @@ plt.savefig("Figures/Milestone_3/velocities.pdf")
 plt.figure()
 plt.title("Evolution of photon quadrupole")
 for i in range(n_k):
+    # plt.plot(a_list[i], delta_gamma_list[i], color=plot_color_k[i])
+    # plt.plot(a_list[i], v_gamma_list[i], color=plot_color_k[i], linestyle="dashed")
     plt.plot(a_list[i], df_list[i]["Theta2"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
+    # plt.axvline(x=a_recomb, color="black", linestyle="dashed")
 plt.xscale("log")
 # plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
@@ -150,9 +154,8 @@ plt.figure()
 plt.title("Evolution of spatial gravitational potential")
 for i in range(n_k):
     plt.plot(a_list[i], df_list[i]["Phi"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
-    # plt.plot(a_list[i], df_list[i]["Phi"] + df_list[i]["Psi"], color=plot_color_k[i], linestyle="dashed", label=f"k={k_values[i]} Mpc")
+    # plt.axvline(x=a_recomb, color="black", linestyle="dashed")
 plt.xscale("log")
-# plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("Spatial gravitational potential $\\Phi$")
 plt.legend()
@@ -164,6 +167,7 @@ plt.title("Evolution of the anisotropic stress")
 for i in range(n_k):
     # plt.plot(a_list[i], df_list[i]["Phi"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
     plt.plot(a_list[i], df_list[i]["Phi"] + df_list[i]["Psi"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
+    # plt.axvline(x=a_recomb, color="black", linestyle="dashed")
 plt.xscale("log")
 # plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
