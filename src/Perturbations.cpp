@@ -20,9 +20,8 @@ void Perturbations::solve(){
   // Integrate all the perturbation equation and spline the result
   integrate_perturbations();
 
-  // // Compute source functions and spline the result
-  std::cout << "#### HUSK UNCOMMENT SOURCE FUNCTION ####" << std::endl;
-  // compute_source_functions();
+  // Compute source functions and spline the result
+  compute_source_functions();
 }
 
 //====================================================
@@ -426,34 +425,76 @@ void Perturbations::compute_source_functions(){
       // TODO: Compute the source functions
       //=============================================================================
       
+      // From Utils
+      const double c = Constants.c;
+
       // From BackgroundCosmology
       const double Hp = cosmo->Hp_of_x(x);
       const double dHpdx = cosmo->dHpdx_of_x(x);
+      const double ddHpddx = cosmo->ddHpddx_of_x(x);
 
       // From Recombination
       const double tau = rec->tau_of_x(x);
       const double g_tilde = rec->g_tilde_of_x(x);
+      const double dgdx_tilde = rec->dgdx_tilde_of_x(x);
+      const double ddgddx_tilde = rec->ddgddx_tilde_of_x(x);
 
       // From Perturbations
       const double Theta0 = get_Theta(x, k, 0);
+      const double Theta2 = get_Theta(x, k, 2); // = Pi in formula, since we ignore polarization terms
+      const double dTheta2dx = get_dThetadx(x, k, 2);
+      const double ddTheta2ddx = get_ddThetaddx(x, k, 2);
       const double Psi = get_Psi(x, k);
       const double dPsidx = get_dPsidx(x, k);
       const double dPhidx = get_dPhidx(x, k);
-      const double Pi = get_Theta(x, k, 2); // Ignore polarization terms
-      const double dPidx = get_dThetadx(x, k, 2); // Ignore polarization terms
+      const double v_b = get_v_b(x, k);
       const double dv_bdx = get_dv_bdx(x, k);
 
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
-      /////////////// FORTSETT HER!!!!!!!! ////////////
+      // First term of S
+      double S_1 = g_tilde * (Theta0 + Psi + Theta2/4.0);
+
+      // Second term of S
+      double S_2 = exp(-tau) * (dPsidx - dPhidx);
+
+      // Derivative of Hp * g_tilde * v_b
+      double dHp_g_vbdx_1 = dHpdx * g_tilde * v_b;
+      double dHp_g_vbdx_2 = Hp * dgdx_tilde * v_b;
+      double dHp_g_vbdx_3 = Hp * g_tilde * dv_bdx;
+
+      double dHp_g_vbdx = dHp_g_vbdx_1 + dHp_g_vbdx_2 + dHp_g_vbdx_3;
+
+      // Third term of S
+      double S_3 = - 1.0/(c*k) * dHp_g_vbdx;
+
+      // Derivative of Hp * g_tilde * Theta2
+      double dHp_g_Theta2dx_1 = dHpdx * g_tilde * Theta2;
+      double dHp_g_Theta2dx_2 = Hp * dgdx_tilde * Theta2;
+      double dHp_g_Theta2dx_3 = Hp * g_tilde * dTheta2dx;
+
+      double dHp_g_Theta2dx = dHp_g_Theta2dx_1 + dHp_g_Theta2dx_2 + dHp_g_Theta2dx_3;
+      
+      // Second derivative of Hp * g_tilde * Theta2
+      double ddHp_g_Theta2ddx_11 = ddHpddx * g_tilde * Theta2;
+      double ddHp_g_Theta2ddx_12 = Hp * ddgddx_tilde * Theta2;
+      double ddHp_g_Theta2ddx_13 = Hp * g_tilde * ddTheta2ddx;
+
+      double ddHp_g_Theta2ddx_21 = dHpdx * dgdx_tilde * Theta2;
+      double ddHp_g_Theta2ddx_22 = dHpdx * g_tilde * dTheta2dx;
+      double ddHp_g_Theta2ddx_23 = Hp * dgdx_tilde * dTheta2dx;
+
+      double ddHp_g_Theta2ddx_1 = ddHp_g_Theta2ddx_11 + ddHp_g_Theta2ddx_12 + ddHp_g_Theta2ddx_13;
+      double ddHp_g_Theta2ddx_2 = 2 * (ddHp_g_Theta2ddx_21 + ddHp_g_Theta2ddx_22 + ddHp_g_Theta2ddx_23);
+
+      double ddHp_g_Theta2ddx = ddHp_g_Theta2ddx_1 + ddHp_g_Theta2ddx_2;
+
+      // Derivative of Hp * dHp_g_Theta2dx
+      double dHp_dHp_g_Theta2dx_dx = dHpdx * dHp_g_Theta2dx + Hp * ddHp_g_Theta2ddx;
+
+      // Third term of S
+      double S_4 = 3.0 / (4.0 * c*c * k*k) * dHp_dHp_g_Theta2dx_dx;
 
       // Temperatur source
-      ST_array[index] = 0.0;
+      ST_array[index] = S_1 + S_2 + S_3 + S_4;
 
       // Polarization source
       if(Constants.polarization){
@@ -716,6 +757,9 @@ double Perturbations::get_Theta(const double x, const double k, const int ell) c
 double Perturbations::get_dThetadx(const double x, const double k, const int ell) const{
   return Theta_spline[ell].deriv_x(x,k);
 }
+double Perturbations::get_ddThetaddx(const double x, const double k, const int ell) const{
+  return Theta_spline[ell].deriv_xx(x,k);
+}
 double Perturbations::get_Theta_p(const double x, const double k, const int ell) const{
   return Theta_p_spline[ell](x,k);
 }
@@ -799,11 +843,19 @@ void Perturbations::output(const double k, const std::string filename) const{
     fp << get_Theta(x,k,2)   << " ";
     fp << get_Phi(x,k)       << " ";
     fp << get_Psi(x,k)       << " ";
-    // fp << get_Pi(x,k)        << " ";
-    // fp << get_Source_T(x,k)  << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << " ";
+    fp << get_Source_T(x,k)  << " ";
+    if (arg >= 0) {
+      fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
+      fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
+      fp << get_Source_T(x,k) * Utils::j_ell(500, arg);
+    } else {
+      // Bessel function does not work when arg < 0, so we only compute while
+      // x>=0, i.e., at times up until today. For other values we set these to 0
+      // to fille the output file.
+      fp << 0 << " ";
+      fp << 0 << " ";
+      fp << 0;
+    }
     fp << "\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);

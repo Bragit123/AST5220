@@ -18,7 +18,10 @@ k0_1.columns = [
     "Theta2",
     "Phi",
     "Psi",
-    "siu"
+    "S_T",
+    "S_T_j5",
+    "S_T_j50",
+    "S_T_j500"
 ]
 
 k0_01 = pd.read_csv("perturbations_k0.01.txt", sep=" ", header=None)
@@ -33,7 +36,10 @@ k0_01.columns = [
     "Theta2",
     "Phi",
     "Psi",
-    "siu"
+    "S_T",
+    "S_T_j5",
+    "S_T_j50",
+    "S_T_j500"
 ]
 
 k0_001 = pd.read_csv("perturbations_k0.001.txt", sep=" ", header=None)
@@ -48,7 +54,10 @@ k0_001.columns = [
     "Theta2",
     "Phi",
     "Psi",
-    "siu"
+    "S_T",
+    "S_T_j5",
+    "S_T_j50",
+    "S_T_j500"
 ]
 
 # k0_0001 = pd.read_csv("perturbations_k0.0001.txt", sep=" ", header=None)
@@ -174,6 +183,23 @@ plt.xlabel("Scalefactor $a$")
 plt.ylabel("Anisotropic stress $\\Phi + \\Psi$")
 plt.legend()
 plt.savefig("Figures/Milestone_3/stress.pdf")
+
+hist_inds = np.argwhere((-8 <= df_list[0]["x"]) * (df_list[0]["x"] <= 0))[:,0] # Indices of "history" (times before today)
+## Source function
+plt.figure()
+plt.title("Source function")
+# for i in range(n_k):
+    # plt.plot(a_list[i], df_list[i]["S_T_j5"] * 1e-3, color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
+# plt.plot(a_list[0], df_list[i]["S_T_j5"] * 1e-3, color=plot_color_k[0], linestyle="solid", label=f"k={k_values[0]} Mpc")
+# # plt.plot(df_list[0]["x"][hist_inds], df_list[0]["S_T_j500"][hist_inds], color=plot_color_k[0], linestyle="solid", label=f"k={k_values[0]} Mpc")
+# plt.plot(df_list[1]["x"][hist_inds], df_list[1]["S_T_j500"][hist_inds], color=plot_color_k[1], linestyle="solid", label=f"k={k_values[1]} Mpc")
+plt.plot(df_list[2]["x"][hist_inds], df_list[2]["S_T_j500"][hist_inds] / 1e-3, color=plot_color_k[2], linestyle="solid", label=f"k={k_values[2]} Mpc")
+# plt.xscale("log")
+# plt.yscale("log")
+plt.xlabel("Scalefactor $a$")
+plt.ylabel("$\\tilde{S}(k,x) j_l [ k (\\eta_0 - \\eta(x)) ] / 10^{-3}$")
+plt.legend()
+plt.savefig("Figures/Milestone_3/source.pdf")
 
 # ## Theta0
 # plt.figure()

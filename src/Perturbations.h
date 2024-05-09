@@ -124,6 +124,7 @@ class Perturbations{
     double get_Pi(const double x, const double k) const;
     double get_Theta(const double x, const double k, const int ell) const;
     double get_dThetadx(const double x, const double k, const int ell) const;
+    double get_ddThetaddx(const double x, const double k, const int ell) const;
     double get_Theta_p(const double x, const double k, const int ell) const;
     double get_Nu(const double x, const double k, const int ell) const;
     double get_Source_T(const double x, const double k) const;
