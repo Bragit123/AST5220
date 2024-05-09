@@ -75,15 +75,24 @@ void PowerSpectrum::generate_bessel_function_splines(){
   // might break down. Use j_ell(z) = Utils::j_ell(ell, z)
   //=============================================================================
 
+  double z_min = 0;
+  double z_max = k_max * cosmo->eta_of_x(0.0);
+  double dz = 2.0*M_PI / 16.0;
+  int n_z = (z_max - z_min) / dz;
+  Vector z_array = Utils::linspace(z_min, z_max, n_z);
+
   for(size_t i = 0; i < ells.size(); i++){
     const int ell = ells[i];
 
-    // ...
-    // ...
-    // ...
-    // ...
+    Vector j_ell_i(n_z, 0.0);
 
-    // Make the j_ell_splines[i] spline
+    for (int iz=0; iz < n_z; iz++) {
+      double z = z_array[iz];
+      j_ell_i[iz] = Utils::j_ell(ell, z);
+    }
+
+    Spline j_ell_spline_i(z_array, j_ell_i);
+    j_ell_splines[i] = j_ell_spline_i;
   }
 
   Utils::EndTiming("besselspline");
