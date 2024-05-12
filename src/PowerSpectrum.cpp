@@ -113,7 +113,7 @@ Vector2D PowerSpectrum::line_of_sight_integration_single(
 
   double eta0 = cosmo->eta_of_x(0.0);
 
-  int n_x = 1000;
+  int n_x = 10000;
   Vector x_array = Utils::linspace(Constants.x_start, 0.0, n_x);
 
   for(size_t ik = 0; ik < k_array.size(); ik++) {
@@ -167,7 +167,6 @@ Vector2D PowerSpectrum::line_of_sight_integration_single(
 //====================================================
 void PowerSpectrum::line_of_sight_integration(Vector & k_array){
   const int n_k        = k_array.size();
-  const int n          = 100;
   const int nells      = ells.size();
   
   // Make storage for the splines we are to create
@@ -228,7 +227,7 @@ Vector PowerSpectrum::solve_for_cell(
 
     for (int ik=0; ik < log_k_array.size(); ik++) {
       integrand_prev = integrand;
-      k = k_array[0];
+      k = k_array[ik];
       P = primordial_power_spectrum(k);
       integrand = P * f_ell_spline[ell](k) * g_ell_spline[ell](k) / k;
 
@@ -270,6 +269,10 @@ double PowerSpectrum::get_matter_power_spectrum(const double x, const double k_m
   double num = c*c * k*k * Phi;
   double den = 3.0/2.0 * OmegaM * exp(-x) * H0*H0;
   double delta_M = num / den;
+
+  pofk = abs(delta_M*delta_M) * primordial_power_spectrum(k);
+
+  pofk = pofk / pow(Constants.Mpc, 3.0);
 
   return pofk;
 }
