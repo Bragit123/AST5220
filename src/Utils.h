@@ -44,7 +44,7 @@ extern struct ConstantsAndUnits {
   const double xhi1        = 4.0 * epsilon_0;             // Ionization energy for singly ionized Helium
   
   // Min and max k-value
-  const double k_min = 0.00005 / Mpc;
+  const double k_min = 0.00001 / Mpc;
   const double k_max = 0.3     / Mpc;
   
   // Min and max x-value

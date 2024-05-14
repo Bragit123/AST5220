@@ -28,9 +28,11 @@ class PowerSpectrum {
     double kpivot_mpc = 0.05;
 
     // The k-values we compute Theta_ell(k) etc. for
-    const int n_k      = 100;
-    const double k_min = Constants.k_min;
-    const double k_max = Constants.k_max;
+    const int n_k      = 1000;
+    // const double k_min = Constants.k_min;
+    // const double k_max = Constants.k_max;
+    const double k_min = 0.1 * cosmo->get_H0() / Constants.c;
+    const double k_max = 1000 * cosmo->get_H0() / Constants.c;
     
     // The ells's we will compute Theta_ell and Cell for
     Vector ells{ 
@@ -38,9 +40,15 @@ class PowerSpectrum {
         20,   25,   30,   40,   50,   60,   70,   80,   90,   100,  
         120,  140,  160,  180,  200,  225,  250,  275,  300,  350,  
         400,  450,  500,  550,  600,  650,  700,  750,  800,  850,  
-        900,  950,  1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 
-        1400, 1450, 1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 
-        1900, 1950, 2000};
+        900,  950,  1000, 1050, 1100, 1150, 1200};
+    // Vector ells{ 
+    //     2,    3,    4,    5,    6,    7,    8,    10,   12,   15,   
+    //     20,   25,   30,   40,   50,   60,   70,   80,   90,   100,  
+    //     120,  140,  160,  180,  200,  225,  250,  275,  300,  350,  
+    //     400,  450,  500,  550,  600,  650,  700,  750,  800,  850,  
+    //     900,  950,  1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 
+    //     1400, 1450, 1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 
+    //     1900, 1950, 2000};
    
     //=====================================================================
     // [1] Create bessel function splines needed for the LOS integration

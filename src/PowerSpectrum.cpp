@@ -36,6 +36,8 @@ void PowerSpectrum::solve(){
   // Implement generate_bessel_function_splines
   //=========================================================================
   generate_bessel_function_splines();
+  std::cout << "k_min = " << k_min << std::endl;
+  std::cout << "k_max = " << k_max << std::endl;
 
   //=========================================================================
   // TODO: Line of sight integration to get Theta_ell(k)
@@ -76,12 +78,17 @@ void PowerSpectrum::generate_bessel_function_splines(){
   // might break down. Use j_ell(z) = Utils::j_ell(ell, z)
   //=============================================================================
 
-  double z_min = 0;
+  double z_min = 0.0;
   double z_max = k_max * cosmo->eta_of_x(0.0);
-  std::cout << "z_max = " << z_max << std::endl;
   double dz = 2.0*M_PI / 16.0;
+  // std::cout << "z_min = " << z_min << std::endl;
+  // std::cout << "z_max = " << z_max << std::endl;
+  // std::cout << "dz = " << dz << std::endl;
   int n_z = (z_max - z_min) / dz;
+  // std::cout << "n_z = " << n_z << std::endl;
+  // std::cout << "----- 1 -----" << std::endl;
   Vector z_array = Utils::linspace(z_min, z_max, n_z);
+  // std::cout << "----- 2 -----" << std::endl;
 
   for(size_t i = 0; i < ells.size(); i++){
     const int ell = ells[i];
@@ -217,6 +224,8 @@ void PowerSpectrum::line_of_sight_integration(Vector & k_array){
   // Make storage for the splines we are to create
   thetaT_ell_of_k_spline = std::vector<Spline>(nells);
 
+
+
   //============================================================================
   // TODO: Solve for Theta_ell(k) and spline the result
   //============================================================================
@@ -258,11 +267,37 @@ Vector PowerSpectrum::solve_for_cell(
   //============================================================================
   
   Vector result = Vector(nells);
+  
+  double dlogk0 = log_k_array[1] - log_k_array[0];
+  double dlogk1 = log_k_array[log_k_array.size()-1] - log_k_array[log_k_array.size()-2];
+  Vector k_array = exp(log_k_array);
+  double dk0 = k_array[1] - k_array[0];
+  double dk1 = k_array[k_array.size()-1] - k_array[k_array.size()-2];
+  double eta0 = cosmo->eta_of_x(0.0);
+  double dk_wanted = 2*M_PI / (32 * eta0);
+  double n0 = 2*M_PI / (dk0 * eta0);
+  double n1 = 2*M_PI / (dk1 * eta0);
+  double n_tot_need = (k_array[k_array.size()-1] - k_array[0]) / dk_wanted;
+  std::cout << "dlogk0 = " << dlogk0 << std::endl;
+  std::cout << "dlogk1 = " << dlogk1 << std::endl;
+  std::cout << "dk0 = " << dk0 << std::endl;
+  std::cout << "dk1 = " << dk1 << std::endl;
+  std::cout << "dk_wanted = " << dk_wanted << std::endl;
+  std::cout << "n0 = " << n0 << std::endl;
+  std::cout << "n1 = " << n1 << std::endl;
+  std::cout << "n_tot_need = " << n_tot_need << std::endl;
+
 
   for (int i=0; i < nells; i++) {
     ODEFunction dCldlogk = [&](double logk, const double *Cl, double *dCldlogk){
       double k = exp(logk);
       double P = primordial_power_spectrum(k);
+      // double k_mpc = k * Constants.Mpc;
+      // std::cout << "k = " << k << std::endl;
+      // std::cout << "k_mpc = " << k_mpc << std::endl;
+      // double P = get_matter_power_spectrum(0.0, k_mpc);
+      // double P_mpc3 = get_matter_power_spectrum(0.0, k_mpc);
+      // double P = P_mpc3 / (pow(Constants.Mpc, 3));
       double Theta_squared = f_ell_spline[i](k) * g_ell_spline[i](k);
 
       dCldlogk[0] = 4*M_PI * P * Theta_squared;
@@ -272,7 +307,8 @@ Vector PowerSpectrum::solve_for_cell(
     
     double k_ini = exp(log_k_array[0]);
     // Vector Cl_ini{primordial_power_spectrum(k_ini)};
-    Vector Cl_ini{1000.0};
+    // Vector Cl_ini{1000.0};
+    Vector Cl_ini{0.0};
     ODESolver ode;
     ode.solve(dCldlogk, log_k_array, Cl_ini);
 
@@ -303,7 +339,10 @@ Vector PowerSpectrum::solve_for_cell(
 //   for (int ell=0; ell < nells; ell++) {
 
 //     double k = k_array[0];
-//     double P = primordial_power_spectrum(k);
+//     double k_mpc = k * Constants.Mpc;
+//     // double P = primordial_power_spectrum(k);
+//     double P_mpc3 = get_matter_power_spectrum(0.0, k);
+//     double P = P_mpc3 / pow(Constants.Mpc, 3);
 //     double integrand = P * f_ell_spline[ell](k) * g_ell_spline[ell](k) / k;
 //     double integrand_prev;
 //     double integral_add;
@@ -312,7 +351,10 @@ Vector PowerSpectrum::solve_for_cell(
 //     for (int ik=0; ik < log_k_array.size(); ik++) {
 //       integrand_prev = integrand;
 //       k = k_array[ik];
-//       P = primordial_power_spectrum(k);
+//       k_mpc = k * Constants.Mpc;
+//       // P = primordial_power_spectrum(k);
+//       P_mpc3 = get_matter_power_spectrum(0.0, k_mpc);
+//       P = P_mpc3 / pow(Constants.Mpc, 3);
 //       integrand = P * f_ell_spline[ell](k) * g_ell_spline[ell](k) / k;
 
 //       integral_add = (integrand_prev + integrand) / 2.0; // Trapezoidal method
@@ -344,7 +386,7 @@ double PowerSpectrum::get_matter_power_spectrum(const double x, const double k_m
   // TODO: Compute the matter power spectrum
   //=============================================================================
 
-  double k = k_mpc * Constants.Mpc;
+  double k = k_mpc / Constants.Mpc;
   double c = Constants.c;
   double Phi = pert->get_Phi(x, k);
   double OmegaM = cosmo->get_OmegaM(x);
@@ -356,9 +398,9 @@ double PowerSpectrum::get_matter_power_spectrum(const double x, const double k_m
 
   pofk = abs(delta_M*delta_M) * primordial_power_spectrum(k);
 
-  pofk = pofk / pow(Constants.Mpc, 3.0);
+  double pofk_mpc3 = pofk * pow(Constants.Mpc, 3.0);
 
-  return pofk;
+  return pofk_mpc3;
 }
 
 //====================================================

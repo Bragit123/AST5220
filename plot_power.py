@@ -3,9 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-## Load each datafile
-n_k = 3
-
 cells = pd.read_csv("cells.txt", sep=" ", header=None)
 cells.columns = [
     "l",
@@ -35,11 +32,13 @@ a_tc = np.exp(x_tc)
 
 ## Density perturbations
 plt.figure()
+plt.xlim((1, 3000))
+plt.ylim((-1000, 8000))
 plt.title("Evolution of density perturbations")
 plt.plot(cells["l"], cells["cell"], label="Theoretic prediction")
 plt.xscale("log")
 # plt.yscale("log")
-plt.xlabel("Multipole $l$")
+plt.xlabel("Multipole $\ell$")
 plt.ylabel("$C_{\\ell}$")
 plt.legend()
 plt.savefig("Figures/Milestone_4/cmb.pdf")
