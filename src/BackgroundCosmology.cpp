@@ -352,7 +352,7 @@ void BackgroundCosmology::info() const{
   std::cout << "  a:       " << 1 << "\n";
   std::cout << "  z:       " << get_z(0) << "\n";
   std::cout << "  t (Gyr): " << t_of_x(0) / Gyr << "\n";
-  std::cout << "  eta:     " << eta_of_x(0) / Gyr << "\n";
+  std::cout << "  eta (Gyr):     " << eta_of_x(0) / Gyr << "\n";
   std::cout << std::endl;
 } 
 
