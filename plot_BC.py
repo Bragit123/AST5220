@@ -56,6 +56,7 @@ a_RM_eq = a[arg_RM_eq]
 z_RM_eq = cosmo_df["z"][arg_RM_eq]
 t_RM_eq = cosmo_df["t"][arg_RM_eq]
 eta_RM_eq = cosmo_df["eta"][arg_RM_eq]
+H_over_H0_RM_eq = cosmo_df["H_over_H0"][arg_RM_eq]
 
 ## Matter-Dark energy equality
 ind_start = 40 # Matter and dark energy have equal densities 0 in the beginning, so must ignore first indices.
@@ -65,6 +66,7 @@ a_ML_eq = a[arg_ML_eq]
 z_ML_eq = cosmo_df["z"][arg_ML_eq]
 t_ML_eq = cosmo_df["t"][arg_ML_eq]
 eta_ML_eq = cosmo_df["eta"][arg_ML_eq]
+
 
 ## Universe starts accelerating
 arg_acc = np.argmin(np.abs(cosmo_df["dHpdx"])) # Matter-Dark energy equality
@@ -197,6 +199,7 @@ print(f"  a = {a_RM_eq:.5f}")
 print(f"  z = {z_RM_eq:4.5f}")
 print(f"  t = {t_RM_eq:.5f}")
 print(f"  eta = {eta_RM_eq:.5f}")
+print(f"  H/H0 = {H_over_H0_RM_eq:.5f}")
 
 print("Matter-dark energy equality")
 print(f"  a = {a_ML_eq:.5f}")

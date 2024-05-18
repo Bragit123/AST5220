@@ -83,7 +83,8 @@ int main(int argc, char **argv){
   PowerSpectrum power(&cosmo, &rec, &pert, A_s, n_s, kpivot_mpc);
   power.solve();
   power.output("cells.txt");
-  power.output_by_k("theta.txt");
+  power.output_theta("theta.txt");
+  power.output_matter("matter.txt");
   
   // Remove when module is completed
   return 0;

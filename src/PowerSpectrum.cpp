@@ -36,8 +36,6 @@ void PowerSpectrum::solve(){
   // Implement generate_bessel_function_splines
   //=========================================================================
   generate_bessel_function_splines();
-  std::cout << "k_min = " << k_min << std::endl;
-  std::cout << "k_max = " << k_max << std::endl;
 
   //=========================================================================
   // TODO: Line of sight integration to get Theta_ell(k)
@@ -278,15 +276,6 @@ Vector PowerSpectrum::solve_for_cell(
   double n0 = 2*M_PI / (dk0 * eta0);
   double n1 = 2*M_PI / (dk1 * eta0);
   double n_tot_need = (k_array[k_array.size()-1] - k_array[0]) / dk_wanted;
-  std::cout << "dlogk0 = " << dlogk0 << std::endl;
-  std::cout << "dlogk1 = " << dlogk1 << std::endl;
-  std::cout << "dk0 = " << dk0 << std::endl;
-  std::cout << "dk1 = " << dk1 << std::endl;
-  std::cout << "dk_wanted = " << dk_wanted << std::endl;
-  std::cout << "n0 = " << n0 << std::endl;
-  std::cout << "n1 = " << n1 << std::endl;
-  std::cout << "n_tot_need = " << n_tot_need << std::endl;
-
 
   for (int i=0; i < nells; i++) {
     ODEFunction dCldlogk = [&](double logk, const double *Cl, double *dCldlogk){
@@ -380,8 +369,6 @@ double PowerSpectrum::primordial_power_spectrum(const double k) const{
 //====================================================
 
 double PowerSpectrum::get_matter_power_spectrum(const double x, const double k_mpc) const{
-  double pofk = 0.0;
-
   //=============================================================================
   // TODO: Compute the matter power spectrum
   //=============================================================================
@@ -389,16 +376,17 @@ double PowerSpectrum::get_matter_power_spectrum(const double x, const double k_m
   double k = k_mpc / Constants.Mpc;
   double c = Constants.c;
   double Phi = pert->get_Phi(x, k);
-  double OmegaM = cosmo->get_OmegaM(x);
+  double OmegaM = cosmo->get_OmegaM();
   double H0 = cosmo->get_H0();
 
   double num = c*c * k*k * Phi;
   double den = 3.0/2.0 * OmegaM * exp(-x) * H0*H0;
   double delta_M = num / den;
 
-  pofk = abs(delta_M*delta_M) * primordial_power_spectrum(k);
+  // double pofk = abs(delta_M*delta_M) * primordial_power_spectrum(k) * 2*M_PI*M_PI / pow(k, 3.0);
+  double pofk = abs(delta_M)*abs(delta_M) * primordial_power_spectrum(k) * 2*M_PI*M_PI / pow(k, 3.0);
 
-  double pofk_mpc3 = pofk * pow(Constants.Mpc, 3.0);
+  double pofk_mpc3 = pofk / pow(Constants.Mpc, 3.0);
 
   return pofk_mpc3;
 }
@@ -442,8 +430,7 @@ void PowerSpectrum::output(std::string filename) const{
   std::for_each(ellvalues.begin(), ellvalues.end(), print_data);
 }
 
-void PowerSpectrum::output_by_k(std::string filename) const{
-  // Output in standard units of muK^2
+void PowerSpectrum::output_theta(std::string filename) const{
   const double H0 = cosmo->get_H0();
   const double c = Constants.c;
 
@@ -456,6 +443,21 @@ void PowerSpectrum::output_by_k(std::string filename) const{
     fp << thetaT_ell_of_k_spline[24](k)  << " ";
     fp << thetaT_ell_of_k_spline[32](k)  << " ";
     fp << thetaT_ell_of_k_spline[42](k)  << " ";
+    fp << "\n";
+  };
+  std::for_each(kvalues.begin(), kvalues.end(), print_data);
+}
+
+void PowerSpectrum::output_matter(std::string filename) const{
+  const double h = cosmo->get_h();
+  const double Mpc = Constants.Mpc;
+
+  std::ofstream fp(filename.c_str());
+  auto kvalues = Utils::linspace(k_min, k_max, n_k);
+  auto print_data = [&] (const double k) {
+    double k_mpc = k * Mpc;
+    fp << k_mpc/h                                 << " ";
+    fp << get_matter_power_spectrum(0.0, k_mpc) * pow(h, 3.0)     << " ";
     fp << "\n";
   };
   std::for_each(kvalues.begin(), kvalues.end(), print_data);

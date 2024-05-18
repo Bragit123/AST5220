@@ -46,6 +46,7 @@ extern struct ConstantsAndUnits {
   // Min and max k-value
   const double k_min = 0.00001 / Mpc;
   const double k_max = 0.3     / Mpc;
+  // const double k_max = 2.0     / Mpc;
   
   // Min and max x-value
   // Use these when not considering supernova data

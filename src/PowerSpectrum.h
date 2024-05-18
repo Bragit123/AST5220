@@ -28,7 +28,9 @@ class PowerSpectrum {
     double kpivot_mpc = 0.05;
 
     // The k-values we compute Theta_ell(k) etc. for
-    const int n_k      = 1000;
+    const int n_k      = 1500;
+    // const int n_k      = 2000;
+    // const int n_k      = 100;
     // const double k_min = Constants.k_min;
     // const double k_max = Constants.k_max;
     const double k_min = 0.1 * cosmo->get_H0() / Constants.c;
@@ -125,7 +127,8 @@ class PowerSpectrum {
 
     // Output Cells in units of l(l+1)/2pi (muK)^2
     void output(std::string filename) const;
-    void output_by_k(std::string filename) const;
+    void output_theta(std::string filename) const;
+    void output_matter(std::string filename) const;
 };
 
 #endif

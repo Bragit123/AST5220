@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+import healpy as hp
 
 cells = pd.read_csv("cells.txt", sep=" ", header=None)
 cells.columns = [
@@ -9,6 +9,23 @@ cells.columns = [
     "cell",
     "cellN",
     "skrrt"
+]
+
+planck_low = pd.read_csv("data/planck_cell_low.txt", sep=r"\s+", comment="#", header=None)
+planck_low.columns = [
+    "l",
+    "Cell",
+    "err_up",
+    "err_down"
+]
+
+planck_high = pd.read_csv("data/planck_cell_high.txt", sep=r"\s+", comment="#", header=None)
+planck_high.columns = [
+    "l",
+    "Cell",
+    "err_down",
+    "err_up",
+    "best_fit"
 ]
 
 thetas = pd.read_csv("theta.txt", sep=" ", header=None)
@@ -22,6 +39,26 @@ thetas.columns = [
     "skrrt",
 ]
 
+matter = pd.read_csv("matter.txt", sep=" ", header=None)
+matter.columns = [
+    "k",
+    "P",
+    "skrrt"
+]
+
+reid = pd.read_csv("data/reid_DR7.txt", sep=" ", comment="#", header=None)
+reid.columns = [
+    "k",
+    "P",
+    "error"
+]
+
+wmap = pd.read_csv("data/wmap_act.txt", sep=r"\s+", comment="#", header=None)
+wmap.columns = [
+    "k",
+    "P",
+    "P_up"
+]
 
 ## Recombination and tight coupling scalefactor
 x_recomb = -6.98549 # From output of ./cmb
@@ -32,10 +69,10 @@ a_tc = np.exp(x_tc)
 
 ## Density perturbations
 plt.figure()
-plt.xlim((1, 3000))
-plt.ylim((-1000, 8000))
 plt.title("Evolution of density perturbations")
 plt.plot(cells["l"], cells["cell"], label="Theoretic prediction")
+plt.errorbar(planck_low["l"], planck_low["Cell"], (planck_low["err_down"], planck_low["err_up"]), fmt=".k", label="Planck best fit")
+plt.errorbar(planck_high["l"], planck_high["Cell"], (planck_high["err_down"], planck_high["err_up"]), fmt=".k", label="Planck best fit")
 plt.xscale("log")
 # plt.yscale("log")
 plt.xlabel("Multipole $\ell$")
@@ -44,17 +81,72 @@ plt.legend()
 plt.savefig("Figures/Milestone_4/cmb.pdf")
 
 n = int(len(thetas["k"]) / 3)
+k = thetas["k"][:n]
+ells = [6, 100, 200, 500, 1000]
+theta_arrs = [
+    thetas["theta6"][:n],
+    thetas["theta100"][:n],
+    thetas["theta200"][:n],
+    thetas["theta500"][:n],
+    thetas["theta1000"][:n]
+]
+theta2_arrs = []
+for theta_arr in theta_arrs:
+    theta2_arr = theta_arr * theta_arr / k
+    theta2_arrs.append(theta2_arr)
 ## Thetas
 plt.figure()
 plt.title("Theta")
-plt.plot(thetas["k"][:n], thetas["theta6"][:n], label="Theoretic prediction")
-plt.plot(thetas["k"][:n], thetas["theta100"][:n], label="Theoretic prediction")
-plt.plot(thetas["k"][:n], thetas["theta200"][:n], label="Theoretic prediction")
-plt.plot(thetas["k"][:n], thetas["theta500"][:n], label="Theoretic prediction")
-plt.plot(thetas["k"][:n], thetas["theta1000"][:n], label="Theoretic prediction")
-# plt.xscale("log")
-# plt.yscale("log")
+for i in range(len(ells)):
+    plt.plot(k, theta_arrs[i], label=f"$\\ell = {ells[i]}$")
 plt.xlabel("$ck/H_0$")
 plt.ylabel("$\\Theta_l^2 H_0 / (ck)$")
 plt.legend()
-plt.savefig("Figures/Milestone_4/thetas.pdf")
+plt.savefig("Figures/Milestone_4/thetas.pdf", bbox_inches="tight")
+
+n2 = int(n/3)
+## Thetas
+plt.figure()
+plt.title("Theta")
+for i in range(len(ells)):
+    plt.plot(k[:n2], theta2_arrs[i][:n2], label=f"$\\ell = {ells[i]}$")
+plt.xlabel("$ck/H_0$")
+plt.ylabel("$\\Theta_l^2 H_0 / (ck)$")
+# plt.xscale("log")
+# plt.yscale("log")
+plt.legend()
+plt.savefig("Figures/Milestone_4/theta2s.pdf", bbox_inches="tight")
+
+
+Mpc = 3.08567758e22 # From Utils.h
+c = 2.99792458e8 # From Utils.h
+a_eq = 0.00016 # From plot_BC output
+H_over_H0_eq = 391813 # From plot_BC output
+H0 = 67e3 / Mpc # From Utils.h
+H_eq = H_over_H0_eq * H0
+k_eq = a_eq * H_eq / c
+k_eq = k_eq * Mpc / 0.67
+plt.figure()
+plt.title("Matter power spectrum")
+ind_start = 10
+# plt.plot(matter["k"][ind_start:], matter["P"][ind_start:])
+plt.plot(matter["k"], matter["P"])
+plt.axvline(x=k_eq, color="black", linestyle="dashed")
+# plt.plot(matter["k"], matter["P"] / k, linestyle="dashed", color="blue")
+plt.errorbar(reid["k"], reid["P"], yerr=reid["error"], fmt=".")
+plt.errorbar(wmap["k"], wmap["P"], yerr=wmap["P_up"]-wmap["P"], fmt=".")
+# plt.errorbar(wmap["k"], wmap_mean, yerr=wmap_err)
+# plt.plot(wmap["k"], wmap["P_up"], ".")
+plt.xlabel("$k$ $(h/Mpc)$")
+plt.ylabel("$P(k, x=0)$ $(Mpc/h)^3$")
+plt.xscale("log")
+plt.yscale("log")
+plt.savefig("Figures/Milestone_4/matter.pdf", bbox_inches="tight")
+
+
+# ## CMB map
+# np.random.seed(100)
+# cmb_map = hp.synfast(cells["cell"], 1024)
+# plt.figure()
+# hp.mollview(cmb_map, min=1e-3, max=1e-1, title="CMB only temperature map", unit="K")
+# plt.savefig("Figures/Milestone_4/cmb_map.pdf")
