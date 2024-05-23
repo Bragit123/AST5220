@@ -169,9 +169,13 @@ plt.yscale("log")
 plt.savefig("Figures/Milestone_4/matter.pdf", bbox_inches="tight")
 
 
-# ## CMB map
-# np.random.seed(100)
-# cmb_map = hp.synfast(cells["cell"], 1024)
-# plt.figure()
-# hp.mollview(cmb_map, min=1e-3, max=1e-1, title="CMB only temperature map", unit="K")
-# plt.savefig("Figures/Milestone_4/cmb_map.pdf")
+## CMB map
+np.random.seed(100)
+l = cells["l"]
+cell = cells["cell"] / (l*(l+1)) * 2*np.pi
+lmax = np.max(l)
+cmb_map = hp.synfast(cell, nside=2**10, lmax=lmax, mmax=lmax)
+
+fig = plt.figure()
+mollview = hp.mollview(cmb_map, fig=fig, cmap="RdYlBu", title="CMB temperature map", unit="K")
+plt.savefig("Figures/Milestone_4/cmb_map.pdf")
