@@ -52,7 +52,6 @@ cosmo_df["t"] = cosmo_df["t"] / Gyr
 ### Time-values at different epochs
 ## Radiation-Matter equality
 arg_RM_eq = np.argmin(np.abs(OmegaRad[a<1] - OmegaMat[a<1])) # Radiation-Matter equality
-print(arg_RM_eq)
 a_RM_eq = a[arg_RM_eq]
 z_RM_eq = cosmo_df["z"][arg_RM_eq]
 t_RM_eq = cosmo_df["t"][arg_RM_eq]
