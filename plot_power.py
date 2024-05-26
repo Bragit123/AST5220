@@ -158,24 +158,25 @@ ind_start = 10
 plt.plot(matter["k"][5:], matter["P"][5:], label="Theory prediction")
 plt.axvline(x=k_eq, color="black", linestyle="dashed")
 # plt.plot(matter["k"], matter["P"] / k, linestyle="dashed", color="blue")
-plt.errorbar(reid["k"], reid["P"], yerr=reid["error"], fmt=".", label="Reid")
-plt.errorbar(wmap["k"], wmap["P"], yerr=wmap["P_up"]-wmap["P"], fmt=".", label="WMAP")
+plt.errorbar(reid["k"], reid["P"], yerr=reid["error"], fmt=".", label="SDSS DR7 LRG")
+plt.errorbar(wmap["k"], wmap["P"], yerr=wmap["P_up"]-wmap["P"], fmt=".", label="WMAP and ACT")
 # plt.errorbar(wmap["k"], wmap_mean, yerr=wmap_err)
 # plt.plot(wmap["k"], wmap["P_up"], ".")
 plt.xlabel("$k$ $(h/Mpc)$")
 plt.ylabel("$P(k, x=0)$ $(Mpc/h)^3$")
 plt.xscale("log")
 plt.yscale("log")
+plt.legend()
 plt.savefig("Figures/Milestone_4/matter.pdf", bbox_inches="tight")
 
 
 ## CMB map
-np.random.seed(100)
+np.random.seed(500)
 l = cells["l"]
 cell = cells["cell"] / (l*(l+1)) * 2*np.pi
 lmax = np.max(l)
 cmb_map = hp.synfast(cell, nside=2**10, lmax=lmax, mmax=lmax)
 
 fig = plt.figure()
-mollview = hp.mollview(cmb_map, fig=fig, cmap="RdYlBu", title="CMB temperature map", unit="K")
+mollview = hp.mollview(cmb_map, fig=fig, cmap="RdYlBu", title="CMB temperature map", unit="$\\mu$K")
 plt.savefig("Figures/Milestone_4/cmb_map.pdf")

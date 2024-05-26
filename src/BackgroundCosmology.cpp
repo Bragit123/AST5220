@@ -41,8 +41,7 @@ void BackgroundCosmology::solve(){
   // TODO: Set the range of x and the number of points for the splines
   // For this Utils::linspace(x_start, x_end, npts) is useful
   //=============================================================================
-  double npts = 100;
-  std::cout << x_start << " : " << x_end << std::endl;
+  double npts = n_x;
   Vector x_array = Utils::linspace(x_start, x_end, npts);
 
   // The ODE for deta/dx
@@ -307,7 +306,7 @@ void BackgroundCosmology::info() const{
 
   const double x_min = x_start;
   const double x_max = x_end;
-  const int    n_pts = 100;
+  const int    n_pts = n_x;
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);
   
   Vector OmegaMR_array(n_pts, 0.0);
@@ -331,23 +330,6 @@ void BackgroundCosmology::info() const{
     OmegaMDE_array.at(i) = OmegaMDE_i;
   }
 
-  /*
-  std::cout << "1" << std::endl;
-  Spline OmegaMR(x_array, OmegaMR_array);
-  std::cout << "2" << std::endl;
-  std::cout << OmegaMR(exp(3.0*pow(10,-4))) << std::endl;
-  std::cout << "3" << std::endl;
-  double x_MR = Utils::binary_search_for_value(OmegaMR, 0.03);
-  std::cout << "4" << std::endl;
-
-  std::cout << "Matter-Radiation equality" << "\n";
-  std::cout << "  x = " << x_MR << "\n";
-
-  std::cout << "Universe begins to accelerate" << "\n";
-  
-  std::cout << "Matter-Dark energy equality" << "\n";
-  */
-
   std::cout << "Today" << "\n";
   std::cout << "  a:       " << 1 << "\n";
   std::cout << "  z:       " << get_z(0) << "\n";
@@ -362,7 +344,7 @@ void BackgroundCosmology::info() const{
 void BackgroundCosmology::output(const std::string filename) const{
   const double x_min = x_start;
   const double x_max = x_end;
-  const int    n_pts = 100;
+  const int    n_pts = n_x;
   
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);
   std::cout << x_min << std::endl;

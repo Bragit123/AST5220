@@ -52,6 +52,7 @@ cosmo_df["t"] = cosmo_df["t"] / Gyr
 ### Time-values at different epochs
 ## Radiation-Matter equality
 arg_RM_eq = np.argmin(np.abs(OmegaRad[a<1] - OmegaMat[a<1])) # Radiation-Matter equality
+print(arg_RM_eq)
 a_RM_eq = a[arg_RM_eq]
 z_RM_eq = cosmo_df["z"][arg_RM_eq]
 t_RM_eq = cosmo_df["t"][arg_RM_eq]
@@ -59,7 +60,7 @@ eta_RM_eq = cosmo_df["eta"][arg_RM_eq]
 H_over_H0_RM_eq = cosmo_df["H_over_H0"][arg_RM_eq]
 
 ## Matter-Dark energy equality
-ind_start = 40 # Matter and dark energy have equal densities 0 in the beginning, so must ignore first indices.
+ind_start = 500 # Matter and dark energy have equal densities 0 in the beginning, so must ignore first indices.
 ML_diff = np.abs(OmegaMat[ind_start:]-cosmo_df["OmegaLambda"][ind_start:])
 arg_ML_eq = np.argmin(ML_diff) + ind_start # Matter-Dark energy equality
 a_ML_eq = a[arg_ML_eq]
