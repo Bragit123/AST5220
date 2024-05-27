@@ -133,6 +133,7 @@ plt.savefig("Figures/Milestone_1/supernova_H0.pdf")
 
 ## Scatterplot ML
 plt.figure()
+plt.title("Scatterplot of $\\Omega_M$ and $\\Omega_\\Lambda$ from MCMC samples")
 plt.scatter(x=OmegaM_sigma2, y=OmegaLambda_sigma2, label="$2\\sigma$ constraint", rasterized=True)
 plt.scatter(x=OmegaM_sigma1, y=OmegaLambda_sigma1, label="$1\\sigma$ constraint", rasterized=True)
 plt.plot([0.0,1.0], [1.0,0.0], color="black", linestyle="dashed", label="Flat universe")

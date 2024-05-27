@@ -23,10 +23,15 @@ class BackgroundCosmology{
     double OmegaK;                  // Curvature density = 1 - OmegaM - OmegaR - OmegaNu - OmegaLambda
     double H0;                      // The Hubble parameter today H0 = 100h km/s/Mpc
 
-    // Start and end of x-integration (can be changed)
+    // Start and end of x-integration
+    //// Use these when not considering supernova data
     double n_x = 6e5;
     double x_start = Constants.x_start;
     double x_end   = Constants.x_end;
+    //// Use these when considering supernova data
+    // double n_x = 100;
+    // const double x_start = -log(1.0 + 1.300);
+    // const double x_end   = 0.0;
 
     // Splines to be made
     Spline eta_of_x_spline{"eta"};

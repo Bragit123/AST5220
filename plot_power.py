@@ -69,12 +69,11 @@ a_tc = np.exp(x_tc)
 
 ## Density perturbations
 plt.figure()
-plt.title("Evolution of density perturbations")
+plt.title("The CMB power spectrum")
 plt.plot(cells["l"], cells["cell"], label="Theory prediction")
 plt.errorbar(planck_low["l"], planck_low["Cell"], (planck_low["err_down"], planck_low["err_up"]), fmt=".k", label="Planck best fit")
 plt.errorbar(planck_high["l"], planck_high["Cell"], (planck_high["err_down"], planck_high["err_up"]), fmt=".k")
 plt.xscale("log")
-# plt.yscale("log")
 plt.xlabel("Multipole $\ell$")
 plt.ylabel("$\\frac{\\ell (\\ell + 1)}{2 \\pi}C_{\\ell} (\\mu K)^2$")
 plt.legend()
@@ -94,6 +93,7 @@ theta2_arrs = []
 for theta_arr in theta_arrs:
     theta2_arr = theta_arr * theta_arr / k
     theta2_arrs.append(theta2_arr)
+
 ## Thetas
 plt.figure()
 plt.title("Photon multipoles")
@@ -104,7 +104,6 @@ plt.ylabel("$\\Theta_\\ell$")
 plt.legend()
 plt.savefig("Figures/Milestone_4/thetas.pdf", bbox_inches="tight")
 
-# n2 = int(n/3)
 ## Theta^2/k
 ymax = [1e-4, 1e-6, 1e-8]
 plt.figure()
@@ -113,7 +112,6 @@ for ax_i in range(3):
     ax = axs[ax_i]
     ax.set_ylim(top=ymax[ax_i])
     for i in range(len(ells)):
-        # plt.plot(k[:n2], theta2_arrs[i][:n2], label=f"$\\ell = {ells[i]}$")
         if ax_i == 0:
             ax.plot(k, theta2_arrs[i], label=f"$\\ell = {ells[i]}$")
         else:
@@ -124,23 +122,6 @@ axs[2].set_xlabel("$ck/H_0$")
 axs[1].set_ylabel("$\\Theta_{\\ell}^2 H_0 / (ck)$")
 fig.legend(loc="center right")
 fig.savefig("Figures/Milestone_4/theta2s.pdf", bbox_inches="tight")
-
-# # n2 = int(n/3)
-# ## Theta^2/k
-# plt.figure()
-# fig, axs = plt.subplots(3, 1)
-# for ax_i in range(3):
-#     plt.ylim(0, ymax[ax_i])
-#     plt.title("Theta")
-#     for i in range(len(ells)):
-#         # plt.plot(k[:n2], theta2_arrs[i][:n2], label=f"$\\ell = {ells[i]}$")
-#         plt.plot(k, theta2_arrs[i], label=f"$\\ell = {ells[i]}$")
-#     plt.xlabel("$ck/H_0$")
-#     plt.ylabel("$\\Theta_l^2 H_0 / (ck)$")
-#     # plt.xscale("log")
-#     # plt.yscale("log")
-#     plt.legend()
-#     plt.savefig("Figures/Milestone_4/theta2s.pdf", bbox_inches="tight")
 
 
 Mpc = 3.08567758e22 # From Utils.h
@@ -153,15 +134,11 @@ k_eq = a_eq * H_eq / c
 k_eq = k_eq * Mpc / 0.67
 plt.figure()
 plt.title("Matter power spectrum")
-ind_start = 10
-# plt.plot(matter["k"][ind_start:], matter["P"][ind_start:])
-plt.plot(matter["k"][5:], matter["P"][5:], label="Theory prediction")
+ind_start = 5
+plt.plot(matter["k"][ind_start:], matter["P"][ind_start:], label="Theory prediction")
 plt.axvline(x=k_eq, color="black", linestyle="dashed")
-# plt.plot(matter["k"], matter["P"] / k, linestyle="dashed", color="blue")
 plt.errorbar(reid["k"], reid["P"], yerr=reid["error"], fmt=".", label="SDSS DR7 LRG")
 plt.errorbar(wmap["k"], wmap["P"], yerr=wmap["P_up"]-wmap["P"], fmt=".", label="WMAP and ACT")
-# plt.errorbar(wmap["k"], wmap_mean, yerr=wmap_err)
-# plt.plot(wmap["k"], wmap["P_up"], ".")
 plt.xlabel("$k$ $(h/Mpc)$")
 plt.ylabel("$P(k, x=0)$ $(Mpc/h)^3$")
 plt.xscale("log")

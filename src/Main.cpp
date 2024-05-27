@@ -43,7 +43,6 @@ int main(int argc, char **argv){
 
   // Do the supernova fits. Uncomment when you are ready to run this
   // Make sure you read the comments on the top of src/SupernovaFitting.h
-  
   // mcmc_fit_to_supernova_data("data/supernovadata.txt", "results_supernovafitting.txt");
 
 
