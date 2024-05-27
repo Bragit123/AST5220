@@ -51,11 +51,15 @@ plt.legend()
 plt.savefig("Figures/Milestone_2/recomb_Xe_log.pdf")
 
 ## tau
+#Splines are acting up at beginning and end, which are not too interesting
+#anyway. We restrict to get a better view of the interesting part.
+ind_start = 10
+ind_end = -10
 plt.figure()
 plt.title("Evolution of optical depth")
-plt.plot(a, recomb_df["tau"], label="$\\tau$")
-plt.plot(a, -recomb_df["dtaudx"], label="$-\\frac{d\\tau}{dx}$")
-plt.plot(a, recomb_df["ddtauddx"], label="$\\frac{d^2\\tau}{dx^2}$")
+plt.plot(a[ind_start:ind_end], recomb_df["tau"][ind_start:ind_end], label="$\\tau$")
+plt.plot(a[ind_start:ind_end], -recomb_df["dtaudx"][ind_start:ind_end], label="$-\\frac{d\\tau}{dx}$")
+plt.plot(a[ind_start:ind_end], recomb_df["ddtauddx"][ind_start:ind_end], label="$\\frac{d^2\\tau}{dx^2}$")
 plt.axvline(x=a_recomb, linestyle="dashed", color="black")
 plt.xscale("log")
 plt.yscale("log")
@@ -65,11 +69,15 @@ plt.legend()
 plt.savefig("Figures/Milestone_2/recomb_tau.pdf")
 
 ## g_tilde
+# Zero for most a-values, so we restrict the view to easier see the interesting part.
+n = len(recomb_df["g_tilde"])
+ind_start = int(n/2)
+ind_end = int(7*n/11)
 plt.figure()
 plt.title("Evolution of the visibility function")
-plt.plot(a[1500:2500], recomb_df["g_tilde"][1500:2500], label="$\\tilde{g}$")
-plt.plot(a[1500:2500], recomb_df["dgdx_tilde"][1500:2500]/10, label="$\\frac{1}{10}\\frac{d\\tilde{g}}{dx}$")
-plt.plot(a[1500:2500], recomb_df["ddgddx_tilde"][1500:2500]/100, label="$\\frac{1}{100}\\frac{d^2\\tilde{g}}{dx^2}$")
+plt.plot(a[ind_start:ind_end], recomb_df["g_tilde"][ind_start:ind_end], label="$\\tilde{g}$")
+plt.plot(a[ind_start:ind_end], recomb_df["dgdx_tilde"][ind_start:ind_end]/10, label="$\\frac{1}{10}\\frac{d\\tilde{g}}{dx}$")
+plt.plot(a[ind_start:ind_end], recomb_df["ddgddx_tilde"][ind_start:ind_end]/100, label="$\\frac{1}{100}\\frac{d^2\\tilde{g}}{dx^2}$")
 plt.axvline(x=a_recomb, linestyle="dashed", color="black")
 plt.xscale("log")
 plt.xlabel("Scalefactor $a$")
