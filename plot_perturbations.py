@@ -3,6 +3,33 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+## Need conformal Hubble parameter to compare k to horizon
+cosmo_df = pd.read_csv("cosmology.txt", sep=" ", header=None)
+cosmo_df.columns = [
+    "x",
+    "z",
+    "eta",
+    "t",
+    "H_over_H0",
+    "Hp",
+    "dHpdx",
+    "ddHpddx",
+    "dL",
+    "chi",
+    "dA",
+    "OmegaB",
+    "OmegaCDM",
+    "OmegaLambda",
+    "OmegaR",
+    "OmegaNu",
+    "OmegaK"
+]
+x_cosmo = cosmo_df["x"]
+a_cosmo = np.exp(x_cosmo)
+Hp = cosmo_df["Hp"]
+c = 3e8
+
+
 ## Load each datafile
 n_k = 3
 
@@ -71,12 +98,18 @@ for df in df_list:
     delta_gamma_list.append(4.0 * df["Theta0"])
     v_gamma_list.append(-3.0 * df["Theta1"])
 
-## Recombination and tight coupling scalefactor
-x_recomb = -6.98549 # From output of ./cmb
-a_recomb = np.exp(x_recomb)
+## Decoupling scalefactor
+a_decoup = 0.00092396 # From ./cmb
 
 x_tc = -6.99409
 a_tc = np.exp(x_tc)
+
+## Horizon
+a_horizon = []
+Mpc = 3.08567758e22
+for k in k_values:
+    horizon_ind = np.argmin(np.abs(Hp - c*k / Mpc))
+    a_horizon.append(a_cosmo[horizon_ind])
 
 plot_color_k = ["red", "blue", "green", "black"]
 
@@ -87,6 +120,10 @@ for i in range(n_k):
     plt.plot(a_list[i], df_list[i]["delta_cdm"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
     plt.plot(a_list[i], df_list[i]["delta_b"], color=plot_color_k[i], linestyle="dashed")
     plt.plot(a_list[i], delta_gamma_list[i], color=plot_color_k[i], linestyle="dotted")
+    plt.axvline(a_horizon[i], linestyle="dashed", color="black")
+    plt.text(a_horizon[i], 1000, f"$k={k_values[i]}$", rotation=90, horizontalalignment="right")
+plt.axvline(a_decoup, linestyle="dashed", color="black")
+plt.text(a_decoup, 1000, "Decoupling", rotation=90, horizontalalignment="right")
 plt.xscale("log")
 plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
@@ -97,10 +134,15 @@ plt.savefig("Figures/Milestone_3/densities.pdf")
 ## Velocity perturbations
 plt.figure()
 plt.title("Evolution of velocity perturbations")
+plt.ylim(bottom=1e-7, top=1e3)
 for i in range(n_k):
     plt.plot(a_list[i], df_list[i]["v_cdm"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
     plt.plot(a_list[i], df_list[i]["v_b"], color=plot_color_k[i], linestyle="dashed")
     plt.plot(a_list[i], v_gamma_list[i], color=plot_color_k[i], linestyle="dotted")
+    plt.axvline(a_horizon[i], linestyle="dashed", color="black")
+    plt.text(a_horizon[i], 10, f"$k={k_values[i]}$", rotation=90, horizontalalignment="right")
+plt.axvline(a_decoup, linestyle="dashed", color="black")
+plt.text(a_decoup, 5, "Decoupling", rotation=90, horizontalalignment="right")
 plt.xscale("log")
 plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
@@ -112,12 +154,8 @@ plt.savefig("Figures/Milestone_3/velocities.pdf")
 plt.figure()
 plt.title("Evolution of photon quadrupole")
 for i in range(n_k):
-    # plt.plot(a_list[i], delta_gamma_list[i], color=plot_color_k[i])
-    # plt.plot(a_list[i], v_gamma_list[i], color=plot_color_k[i], linestyle="dashed")
     plt.plot(a_list[i], df_list[i]["Theta2"], color=plot_color_k[i], linestyle="solid", label=f"k={k_values[i]} Mpc")
-    # plt.axvline(x=a_recomb, color="black", linestyle="dashed")
 plt.xscale("log")
-# plt.yscale("log")
 plt.xlabel("Scalefactor $a$")
 plt.ylabel("Photon quadrupole $\\Theta_2$")
 plt.legend()

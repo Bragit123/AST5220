@@ -218,3 +218,6 @@ print(f"  a = {a_today:.5f}")
 print(f"  z = {z_today:4.5f}")
 print(f"  t = {t_today:.5f}")
 print(f"  eta = {eta_today:.5f}")
+
+print("Dark energy non-zero")
+print(f"  a = {a_DE:.5f}")
